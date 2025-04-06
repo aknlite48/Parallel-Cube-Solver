@@ -1,3 +1,15 @@
+U , U'
+U' , U
+D , D'
+D' , D
+R , R'
+R' , R
+L , L'
+L' , L
+F , F'
+F' , F
+B , B'
+B' , B
 U' R' L U F' , F U' R L' U
 D R' R' L B' , B R R L' D'
 B U D' F U' , U F' U' D B'
