@@ -15,13 +15,13 @@
 using namespace std;
 
 //vector<int> SOLVED = {1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27};
-vector<int> SOLVED = {1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20};
+vector<uint8_t> SOLVED = {1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20};
 
 enum AV_MOVE {u,ui,d,di,r,ri,l,li,f,fi,b,bi};
 
 string AV_MOVE_CONV[12] = {"U","U'","D","D'","R","R'","L","L'","F","F'","B","B'"};
 
-vector<int> MOVE_LIST = {u,ui,d,di,r,ri,l,li,f,fi,b,bi};
+vector<uint8_t> MOVE_LIST = {u,ui,d,di,r,ri,l,li,f,fi,b,bi};
 
 
 /*
@@ -41,7 +41,7 @@ unordered_map<int,vector<int> > MOVES = {
 };
 */
 
-vector< vector<int> > MOVES = {
+vector< vector<uint8_t> > MOVES = {
 	{u,d,di,r,ri,l,li,f,fi,b,bi},
 	{ui,d,di,r,ri,l,li,f,fi,b,bi},
 	{u,ui,d,r,ri,l,li,f,fi,b,bi},
@@ -57,7 +57,7 @@ vector< vector<int> > MOVES = {
 };
 
 
-void MOVE(vector<int>& c,int &m) {
+void MOVE(vector<uint8_t>& c,uint8_t &m) {
 	switch (m) {
 	case u:
 		swap(c[0],c[5]);
@@ -158,45 +158,45 @@ void MOVE(vector<int>& c,int &m) {
 	}
 }
 
-vector<int> SHUFFLE(vector<int>& c,int n_moves) {
-	vector<int> shuff;
-	srand(time(0)); 
-	for (int i=0;i<n_moves;i++) {
-		int m = (rand()%12);
-		MOVE(c,m);
-		shuff.push_back(m);
-	}
-	return shuff;
-}
+// vector<int> SHUFFLE(vector<int>& c,int n_moves) {
+// 	vector<int> shuff;
+// 	srand(time(0)); 
+// 	for (int i=0;i<n_moves;i++) {
+// 		int m = (rand()%12);
+// 		MOVE(c,m);
+// 		shuff.push_back(m);
+// 	}
+// 	return shuff;
+// }
 
-void MOVE_FROM_SEQ(vector<int>& c,vector<int>& seq) {
-	for (int &i: seq) {
+void MOVE_FROM_SEQ(vector<uint8_t>& c,vector<uint8_t>& seq) {
+	for (uint8_t &i: seq) {
 		MOVE(c,i);
 	}
 }
 
-vector<int> SOLVE_E(vector<int>& c,bool use_hash) { //cuts down memory by 1/4th
-	vector<int> sol;
+vector<uint8_t> SOLVE_E(vector<uint8_t>& c,bool use_hash) { //cuts down memory by 1/4th
+	vector<uint8_t> sol;
 
 	if (!use_hash) {
-	vector<int> c_orig = c;
-	vector<int> sol;
+	vector<uint8_t> c_orig = c;
+	vector<uint8_t> sol;
 	if (c_orig==SOLVED) {
 		cout << "already solved" << endl;
 		return sol;
 	}
-	queue<vector<int>> Q;
-	std::vector<int>::size_type depth = 0;
+	queue<vector<uint8_t>> Q;
+	std::vector<uint8_t>::size_type depth = 0;
 
-	for (int &i: MOVE_LIST) {
-		vector<int> c1 = c_orig;
+	for (uint8_t &i: MOVE_LIST) {
+		vector<uint8_t> c1 = c_orig;
 		MOVE(c1,i);
-		Q.push(vector<int> {i});
+		Q.push(vector<uint8_t> {i});
 	}
-	int k=1;
+	uint8_t k=1;
 
 	while(!Q.empty()) {
-		vector<int> s_i = Q.front();
+		vector<uint8_t> s_i = Q.front();
 		Q.pop();
 
 		//if (k%10000==0) {
@@ -206,8 +206,8 @@ vector<int> SOLVE_E(vector<int>& c,bool use_hash) { //cuts down memory by 1/4th
 		if (s_i.size()>depth) {
 			depth=s_i.size();
 		}
-		vector<int> c_i = c_orig;
-		for (int &i: s_i) {
+		vector<uint8_t> c_i = c_orig;
+		for (uint8_t &i: s_i) {
 			MOVE(c_i,i);
 		}
 		if (c_i==SOLVED) {
@@ -217,8 +217,8 @@ vector<int> SOLVE_E(vector<int>& c,bool use_hash) { //cuts down memory by 1/4th
 			cout << "Solution found" << endl;
 			break;
 		}
-		for (int &i: MOVES[s_i.back()]) {
-			vector<int> s_ii = s_i;
+		for (uint8_t &i: MOVES[s_i.back()]) {
+			vector<uint8_t> s_ii = s_i;
 			s_ii.push_back(i);
 			Q.push(s_ii);
 		}
@@ -229,28 +229,28 @@ vector<int> SOLVE_E(vector<int>& c,bool use_hash) { //cuts down memory by 1/4th
 
 	}
 	else {
-	vector<int> c_orig = c;
-	vector<int> sol;
+	vector<uint8_t> c_orig = c;
+	vector<uint8_t> sol;
 	if (c_orig==SOLVED) {
 		cout << "already solved" << endl;
 		return sol;
 	}
-	queue<vector<int>> Q;
-	std::vector<int>::size_type depth = 0;
+	queue<vector<uint8_t>> Q;
+	std::vector<uint8_t>::size_type depth = 0;
 
-	set<vector<int> > visited;
+	set<vector<uint8_t> > visited;
 	int visits=0;
 
 
-	for (int &i: MOVE_LIST) {
-		vector<int> c1 = c_orig;
+	for (uint8_t &i: MOVE_LIST) {
+		vector<uint8_t> c1 = c_orig;
 		MOVE(c1,i);
-		Q.push(vector<int> {i});
+		Q.push(vector<uint8_t> {i});
 	}
 	int k=1;
 
 	while(!Q.empty()) {
-		vector<int> s_i = Q.front();
+		vector<uint8_t> s_i = Q.front();
 		Q.pop();
 
 		//if (k%10000==0) {
@@ -260,8 +260,8 @@ vector<int> SOLVE_E(vector<int>& c,bool use_hash) { //cuts down memory by 1/4th
 		if (s_i.size()>depth) {
 			depth=s_i.size();
 		}
-		vector<int> c_i = c_orig;
-		for (int &i: s_i) {
+		vector<uint8_t> c_i = c_orig;
+		for (uint8_t &i: s_i) {
 			MOVE(c_i,i);
 		}
 		if (visited.count(c_i)) {
@@ -280,8 +280,8 @@ vector<int> SOLVE_E(vector<int>& c,bool use_hash) { //cuts down memory by 1/4th
 			cout << "Solution found " << "Revisits: " << visits << endl;
 			break;
 		}
-		for (int &i: MOVES[s_i.back()]) {
-			vector<int> s_ii = s_i;
+		for (uint8_t &i: MOVES[s_i.back()]) {
+			vector<uint8_t> s_ii = s_i;
 			s_ii.push_back(i);
 			Q.push(s_ii);
 		}
@@ -296,32 +296,32 @@ vector<int> SOLVE_E(vector<int>& c,bool use_hash) { //cuts down memory by 1/4th
 
 
 
-vector<int> SOLVE_M(vector<int>& c,bool use_hash) { //memory intensive
+vector<uint8_t> SOLVE_M(vector<uint8_t>& c,bool use_hash) { //memory intensive
 struct CUBE_STATE {
-	vector<int> s;
-	vector<int> c;
+	vector<uint8_t> s;
+	vector<uint8_t> c;
 
 };
 	if (!use_hash) {
-	vector<int> c_orig = c;
-	vector<int> sol;
+	vector<uint8_t> c_orig = c;
+	vector<uint8_t> sol;
 	if (c_orig==SOLVED) {
 		cout << "already solved" << endl;
 		return sol;
 	}
 	queue<CUBE_STATE> Q;
-	std::vector<int>::size_type depth = 0;
+	std::vector<uint8_t>::size_type depth = 0;
 
-	for (int &i: MOVE_LIST) {
-		vector<int> c1 = c_orig;
+	for (uint8_t &i: MOVE_LIST) {
+		vector<uint8_t> c1 = c_orig;
 		MOVE(c1,i);
-		Q.push({vector<int> {i},c1});
+		Q.push({vector<uint8_t> {i},c1});
 	}
 	int k=1;
 
 	while(!Q.empty()) {
-		vector<int> s_i = Q.front().s;
-		vector<int> c_i = Q.front().c;
+		vector<uint8_t> s_i = Q.front().s;
+		vector<uint8_t> c_i = Q.front().c;
 		Q.pop();
 
 		//if (k%10000==0) {
@@ -339,10 +339,10 @@ struct CUBE_STATE {
 			cout << "Solution found" << endl;
 			break;
 		}
-		for (int &i: MOVES[s_i.back()]) {
-			vector<int> s_ii = s_i;
+		for (uint8_t &i: MOVES[s_i.back()]) {
+			vector<uint8_t> s_ii = s_i;
 			s_ii.push_back(i);
-			vector<int> c_ii = c_i;
+			vector<uint8_t> c_ii = c_i;
 			MOVE(c_ii,i);
 			Q.push({s_ii,c_ii});
 		}
@@ -352,26 +352,26 @@ struct CUBE_STATE {
 	return sol;
 	}
 	else {
-	vector<int> c_orig = c;
-	vector<int> sol;
-	set<vector<int> > visited;
+	vector<uint8_t> c_orig = c;
+	vector<uint8_t> sol;
+	set<vector<uint8_t> > visited;
 	if (c_orig==SOLVED) {
 		cout << "already solved" << endl;
 		return sol;
 	}
 	queue<CUBE_STATE> Q;
-	std::vector<int>::size_type depth = 0;
+	std::vector<uint8_t>::size_type depth = 0;
 
-	for (int &i: MOVE_LIST) {
-		vector<int> c1 = c_orig;
+	for (uint8_t &i: MOVE_LIST) {
+		vector<uint8_t> c1 = c_orig;
 		MOVE(c1,i);
-		Q.push({vector<int> {i},c1});
+		Q.push({vector<uint8_t> {i},c1});
 	}
 	int k=1; int visits=0;
 
 	while(!Q.empty()) {
-		vector<int> s_i = Q.front().s;
-		vector<int> c_i = Q.front().c;
+		vector<uint8_t> s_i = Q.front().s;
+		vector<uint8_t> c_i = Q.front().c;
 		Q.pop();
 
 		if (visited.count(c_i)) {
@@ -397,10 +397,10 @@ struct CUBE_STATE {
 			cout << "Solution found " << "Revisits: " << visits << endl;
 			break;
 		}
-		for (int &i: MOVES[s_i.back()]) {
-			vector<int> s_ii = s_i;
+		for (uint8_t &i: MOVES[s_i.back()]) {
+			vector<uint8_t> s_ii = s_i;
 			s_ii.push_back(i);
-			vector<int> c_ii = c_i;
+			vector<uint8_t> c_ii = c_i;
 			MOVE(c_ii,i);
 			Q.push({s_ii,c_ii});
 		}
@@ -412,15 +412,15 @@ struct CUBE_STATE {
 	}
 }
 
-std::vector<int> PARSE_SEQ(const std::string& input) {
-    std::vector<int> move_indices;
+std::vector<uint8_t> PARSE_SEQ(const std::string& input) {
+    std::vector<uint8_t> move_indices;
     std::istringstream iss(input);
     std::string token;
 
     while (iss >> token) {
         bool found = false;
 
-        for (int i = 0; i < 12; ++i) {
+        for (uint8_t i = 0; i < 12; ++i) {
             if (AV_MOVE_CONV[i] == token) {
                 move_indices.push_back(i);
                 found = true;
@@ -436,9 +436,9 @@ std::vector<int> PARSE_SEQ(const std::string& input) {
     return move_indices;
 }
 
-std::string SHOW_SEQ(std::vector<int>& input) {
+std::string SHOW_SEQ(std::vector<uint8_t>& input) {
 	string sequence;
-	for (int &i:input) {
+	for (uint8_t &i:input) {
 		sequence+=AV_MOVE_CONV[i]+" ";
 	}
 	sequence.pop_back();
@@ -532,7 +532,7 @@ int main (int argc, char* argv[]) {
 	std::cout << "--------------------------------------------\n";
 
     //initial cube state
-	vector<int> cube = SOLVED;
+	vector<uint8_t> cube = SOLVED;
 
 	//initial sequence of shuffle moves
 	auto initial_seq = PARSE_SEQ(shuffle_seq_raw);
@@ -544,7 +544,7 @@ int main (int argc, char* argv[]) {
 	printf("Solver Status:");
 
 	//apply solver
-	vector<int> final_seq = (solver_type=='E') ? SOLVE_E(cube,use_hash) : SOLVE_M(cube,use_hash);
+	vector<uint8_t> final_seq = (solver_type=='E') ? SOLVE_E(cube,use_hash) : SOLVE_M(cube,use_hash);
 
 	//print final seq
 	printf("\n");
