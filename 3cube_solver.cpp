@@ -56,6 +56,22 @@ vector< vector<uint8_t> > MOVES = {
 	{u,ui,d,di,r,ri,l,li,f,fi,bi}
 };
 
+vector< vector<uint8_t> > MOVES_DOUB = {
+    {d,di,r,ri,l,li,f,fi,b,bi},
+    {d,di,r,ri,l,li,f,fi,b,bi},
+    {u,ui,r,ri,l,li,f,fi,b,bi},
+    {u,ui,r,ri,l,li,f,fi,b,bi},
+    {u,ui,d,di,l,li,f,fi,b,bi},
+    {u,ui,d,di,l,li,f,fi,b,bi},
+    {u,ui,d,di,r,ri,f,fi,b,bi},
+    {u,ui,d,di,r,ri,f,fi,b,bi},
+    {u,ui,d,di,r,ri,l,li,b,bi},
+    {u,ui,d,di,r,ri,l,li,b,bi},
+    {u,ui,d,di,r,ri,l,li,f,fi},
+    {u,ui,d,di,r,ri,l,li,f,fi}
+};
+
+
 
 void MOVE(vector<uint8_t>& c,uint8_t &m) {
 	switch (m) {
@@ -188,11 +204,18 @@ vector<uint8_t> SOLVE_E(vector<uint8_t>& c,bool use_hash) { //cuts down memory b
 	queue<vector<uint8_t>> Q;
 	std::vector<uint8_t>::size_type depth = 0;
 
-	for (uint8_t &i: MOVE_LIST) {
-		vector<uint8_t> c1 = c_orig;
-		MOVE(c1,i);
-		Q.push(vector<uint8_t> {i});
-	}
+    //load single move states
+    for (uint8_t &i: MOVE_LIST) {
+        vector<uint8_t> c1 = c_orig;
+        //MOVE(c1,i);
+        Q.push(vector<uint8_t> {i});
+    }
+    //load double move states
+    for (auto &i: MOVE_LIST) {
+        for (auto &j: MOVES[i]) {
+            Q.push(vector<uint8_t> {i,j});
+        }
+    }
 	int k=1;
 
 	while(!Q.empty()) {
@@ -217,11 +240,20 @@ vector<uint8_t> SOLVE_E(vector<uint8_t>& c,bool use_hash) { //cuts down memory b
 			cout << "Solution found" << endl;
 			break;
 		}
-		for (uint8_t &i: MOVES[s_i.back()]) {
-			vector<uint8_t> s_ii = s_i;
-			s_ii.push_back(i);
-			Q.push(s_ii);
-		}
+        if (s_i.back()==s_i[s_i.size()-2]) {
+            for (uint8_t &i: MOVES_DOUB[s_i.back()]) {
+                vector<uint8_t> s_ii = s_i;
+                s_ii.push_back(i);
+                Q.push(s_ii);
+            }
+        }
+        else {
+            for (uint8_t &i: MOVES[s_i.back()]) {
+                vector<uint8_t> s_ii = s_i;
+                s_ii.push_back(i);
+                Q.push(s_ii);
+            }
+        }
 		k++;
 
 	}
@@ -241,12 +273,18 @@ vector<uint8_t> SOLVE_E(vector<uint8_t>& c,bool use_hash) { //cuts down memory b
 	set<vector<uint8_t> > visited;
 	int visits=0;
 
-
+    //load single move states
 	for (uint8_t &i: MOVE_LIST) {
 		vector<uint8_t> c1 = c_orig;
-		MOVE(c1,i);
+		//MOVE(c1,i);
 		Q.push(vector<uint8_t> {i});
 	}
+    //load double move states
+    for (auto &i: MOVE_LIST) {
+        for (auto &j: MOVES[i]) {
+            Q.push(vector<uint8_t> {i,j});
+        }
+    }
 	int k=1;
 
 	while(!Q.empty()) {
@@ -255,11 +293,12 @@ vector<uint8_t> SOLVE_E(vector<uint8_t>& c,bool use_hash) { //cuts down memory b
 
 		if (k%10000==0) {
 		cout << "\r" << "Current depth: " << depth << " Nodes searched: " << k << " Nodes remaining: " << Q.size();
-		}
+            if (s_i.size()>depth) {
+                depth=s_i.size();
+            }
+        }
 
-		if (s_i.size()>depth) {
-			depth=s_i.size();
-		}
+
 		vector<uint8_t> c_i = c_orig;
 		for (uint8_t &i: s_i) {
 			MOVE(c_i,i);
@@ -280,11 +319,20 @@ vector<uint8_t> SOLVE_E(vector<uint8_t>& c,bool use_hash) { //cuts down memory b
 			cout << "Solution found " << "Revisits: " << visits << endl;
 			break;
 		}
-		for (uint8_t &i: MOVES[s_i.back()]) {
-			vector<uint8_t> s_ii = s_i;
-			s_ii.push_back(i);
-			Q.push(s_ii);
-		}
+        if (s_i.back()==s_i[s_i.size()-2]) {
+            for (uint8_t &i: MOVES_DOUB[s_i.back()]) {
+                vector<uint8_t> s_ii = s_i;
+                s_ii.push_back(i);
+                Q.push(s_ii);
+            }
+        }
+        else {
+    		for (uint8_t &i: MOVES[s_i.back()]) {
+    			vector<uint8_t> s_ii = s_i;
+    			s_ii.push_back(i);
+    			Q.push(s_ii);
+    		}
+        }   
 		k++;
 
 	}
@@ -312,11 +360,20 @@ struct CUBE_STATE {
 	queue<CUBE_STATE> Q;
 	std::vector<uint8_t>::size_type depth = 0;
 
-	for (uint8_t &i: MOVE_LIST) {
-		vector<uint8_t> c1 = c_orig;
-		MOVE(c1,i);
-		Q.push({vector<uint8_t> {i},c1});
-	}
+    //load single move states
+    for (uint8_t &i: MOVE_LIST) {
+        vector<uint8_t> c1 = c_orig;
+        MOVE(c1,i);
+        Q.push({vector<uint8_t> {i},c1});
+    }
+    //load double move states
+    for (auto &i: MOVE_LIST) {
+        for (auto &j: MOVES[i]) {
+            vector<uint8_t> c1 = c_orig;
+            MOVE(c1,i); MOVE(c1,j);
+            Q.push({vector<uint8_t> {i,j},c1});
+        }
+    }
 	int k=1;
 
 	while(!Q.empty()) {
@@ -346,6 +403,23 @@ struct CUBE_STATE {
 			MOVE(c_ii,i);
 			Q.push({s_ii,c_ii});
 		}
+        if (s_i.back()==s_i[s_i.size()-2]) {
+            for (uint8_t &i: MOVES_DOUB[s_i.back()]) {
+                vector<uint8_t> s_ii = s_i;
+                vector<uint8_t> c_ii = c_i;
+                MOVE(c_ii,i);
+                Q.push({s_ii,c_ii});
+            }
+        }
+        else {
+            for (uint8_t &i: MOVES[s_i.back()]) {
+                vector<uint8_t> s_ii = s_i;
+                s_ii.push_back(i);
+                vector<uint8_t> c_ii = c_i;
+                MOVE(c_ii,i);
+                Q.push({s_ii,c_ii});
+            }
+        }
 		k++;
 
 	}
@@ -362,11 +436,20 @@ struct CUBE_STATE {
 	queue<CUBE_STATE> Q;
 	std::vector<uint8_t>::size_type depth = 0;
 
-	for (uint8_t &i: MOVE_LIST) {
-		vector<uint8_t> c1 = c_orig;
-		MOVE(c1,i);
-		Q.push({vector<uint8_t> {i},c1});
-	}
+    //load single move states
+    for (uint8_t &i: MOVE_LIST) {
+        vector<uint8_t> c1 = c_orig;
+        MOVE(c1,i);
+        Q.push({vector<uint8_t> {i},c1});
+    }
+    //load double move states
+    for (auto &i: MOVE_LIST) {
+        for (auto &j: MOVES[i]) {
+            vector<uint8_t> c1 = c_orig;
+            MOVE(c1,i); MOVE(c1,j);
+            Q.push({vector<uint8_t> {i,j},c1});
+        }
+    }
 	int k=1; int visits=0;
 
 	while(!Q.empty()) {
@@ -397,13 +480,23 @@ struct CUBE_STATE {
 			cout << "Solution found " << "Revisits: " << visits << endl;
 			break;
 		}
-		for (uint8_t &i: MOVES[s_i.back()]) {
-			vector<uint8_t> s_ii = s_i;
-			s_ii.push_back(i);
-			vector<uint8_t> c_ii = c_i;
-			MOVE(c_ii,i);
-			Q.push({s_ii,c_ii});
-		}
+        if (s_i.back()==s_i[s_i.size()-2]) {
+            for (uint8_t &i: MOVES_DOUB[s_i.back()]) {
+                vector<uint8_t> s_ii = s_i;
+                vector<uint8_t> c_ii = c_i;
+                MOVE(c_ii,i);
+                Q.push({s_ii,c_ii});
+            }
+        }
+        else {
+            for (uint8_t &i: MOVES[s_i.back()]) {
+                vector<uint8_t> s_ii = s_i;
+                s_ii.push_back(i);
+                vector<uint8_t> c_ii = c_i;
+                MOVE(c_ii,i);
+                Q.push({s_ii,c_ii});
+            }
+        }
 		k++;
 
 	}
