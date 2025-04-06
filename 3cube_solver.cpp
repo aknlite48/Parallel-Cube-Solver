@@ -199,9 +199,9 @@ vector<uint8_t> SOLVE_E(vector<uint8_t>& c,bool use_hash) { //cuts down memory b
 		vector<uint8_t> s_i = Q.front();
 		Q.pop();
 
-		//if (k%10000==0) {
+		if (k%10000==0) {
 		cout << "\r" << "Current depth: " << depth << " Nodes searched: " << k << " Nodes remaining: " << Q.size();
-		//}
+		}
 
 		if (s_i.size()>depth) {
 			depth=s_i.size();
@@ -253,9 +253,9 @@ vector<uint8_t> SOLVE_E(vector<uint8_t>& c,bool use_hash) { //cuts down memory b
 		vector<uint8_t> s_i = Q.front();
 		Q.pop();
 
-		//if (k%10000==0) {
+		if (k%10000==0) {
 		cout << "\r" << "Current depth: " << depth << " Nodes searched: " << k << " Nodes remaining: " << Q.size();
-		//}
+		}
 
 		if (s_i.size()>depth) {
 			depth=s_i.size();
@@ -324,9 +324,9 @@ struct CUBE_STATE {
 		vector<uint8_t> c_i = Q.front().c;
 		Q.pop();
 
-		//if (k%10000==0) {
+		if (k%10000==0) {
 		cout << "\r" << "Current depth: " << depth << " Nodes searched: " << k << " Nodes remaining: " << Q.size();
-		//}
+		}
 
 		if (s_i.size()>depth) {
 			depth=s_i.size();
@@ -382,9 +382,9 @@ struct CUBE_STATE {
 			visited.insert(c_i);
 		}
 
-		//if (k%10000==0) {
+		if (k%10000==0) {
 		cout << "\r" << "Current depth: " << depth << " Nodes searched: " << k << " Nodes remaining: " << Q.size();
-		//} 
+		} 
 
 		if (s_i.size()>depth) {
 			depth=s_i.size();
