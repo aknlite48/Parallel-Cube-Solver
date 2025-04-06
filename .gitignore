@@ -1,0 +1,10 @@
+3cube_solver
+
+**/.DS_Store
+*.out
+*.o
+*.obj
+*.exe
+*.a
+*.so
+*.dll
