@@ -193,7 +193,7 @@ vector<uint8_t> SOLVE_E(vector<uint8_t>& c,bool use_hash) { //cuts down memory b
 		MOVE(c1,i);
 		Q.push(vector<uint8_t> {i});
 	}
-	uint8_t k=1;
+	int k=1;
 
 	while(!Q.empty()) {
 		vector<uint8_t> s_i = Q.front();
