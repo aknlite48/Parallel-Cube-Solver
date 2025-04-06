@@ -240,7 +240,7 @@ vector<uint8_t> SOLVE_E(vector<uint8_t>& c,bool use_hash) { //cuts down memory b
 			cout << "Solution found" << endl;
 			break;
 		}
-        if (s_i.back()==s_i[s_i.size()-2]) {
+        if ((s_i.size()>1) && (s_i.back()==s_i[s_i.size()-2])) { //memory safe s_i.size()>1 check but can be optimized
             for (uint8_t &i: MOVES_DOUB[s_i.back()]) {
                 vector<uint8_t> s_ii = s_i;
                 s_ii.push_back(i);
@@ -319,7 +319,7 @@ vector<uint8_t> SOLVE_E(vector<uint8_t>& c,bool use_hash) { //cuts down memory b
 			cout << "Solution found " << "Revisits: " << visits << endl;
 			break;
 		}
-        if (s_i.back()==s_i[s_i.size()-2]) {
+        if ((s_i.size()>1) && (s_i.back()==s_i[s_i.size()-2])) { //memory safe s_i.size()>1 check but can be optimized
             for (uint8_t &i: MOVES_DOUB[s_i.back()]) {
                 vector<uint8_t> s_ii = s_i;
                 s_ii.push_back(i);
@@ -403,7 +403,7 @@ struct CUBE_STATE {
 			MOVE(c_ii,i);
 			Q.push({s_ii,c_ii});
 		}
-        if (s_i.back()==s_i[s_i.size()-2]) {
+        if ((s_i.size()>1) && (s_i.back()==s_i[s_i.size()-2])) { //memory safe s_i.size()>1 check but can be optimized
             for (uint8_t &i: MOVES_DOUB[s_i.back()]) {
                 vector<uint8_t> s_ii = s_i;
                 vector<uint8_t> c_ii = c_i;
@@ -480,7 +480,7 @@ struct CUBE_STATE {
 			cout << "Solution found " << "Revisits: " << visits << endl;
 			break;
 		}
-        if (s_i.back()==s_i[s_i.size()-2]) {
+        if ((s_i.size()>1) && (s_i.back()==s_i[s_i.size()-2])) { //memory safe s_i.size()>1 check but can be optimized
             for (uint8_t &i: MOVES_DOUB[s_i.back()]) {
                 vector<uint8_t> s_ii = s_i;
                 vector<uint8_t> c_ii = c_i;
