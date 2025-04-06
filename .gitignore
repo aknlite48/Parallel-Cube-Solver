@@ -1,4 +1,6 @@
 3cube_solver
+tests/Makefile
+tests/*.cpp
 
 **/.DS_Store
 *.out
