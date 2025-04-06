@@ -1,30 +1,43 @@
 #!/bin/bash
-# Test script for cube solver
-# Tests the solver with different input sequences from a specified tests file
+# Test script for a program with test cases
+# Usage: ./test_script.sh <program_path> <test_cases_file>
 
-# Default tests file
-TESTS_FILE="tests.txt"
-
-# Check if a file name was provided as argument
-if [ $# -ge 1 ]; then
-    TESTS_FILE="$1"
+# Check if both arguments are provided
+if [ $# -lt 2 ]; then
+    echo "Error: Insufficient arguments!"
+    echo "Usage: $0 <program_path> <test_cases_file>"
+    exit 1
 fi
 
-# Compile the program
-rm 3cube_solver.cpp
-rm Makefile
-cp ../3cube_solver.cpp .
-cp ../Makefile .
-make clean
-make
+PROGRAM_PATH="$1"
+TESTS_FILE="$2"
+
+# Check if program file exists
+if [ ! -f "$PROGRAM_PATH" ]; then
+    echo "Error: Program file '$PROGRAM_PATH' not found!"
+    exit 1
+fi
 
 # Check if tests file exists
 if [ ! -f "$TESTS_FILE" ]; then
-    echo "Error: $TESTS_FILE file not found!"
+    echo "Error: Test cases file '$TESTS_FILE' not found!"
     echo "Please create a tests file with shuffle and solution pairs."
     echo "Format: 'shuffle_sequence , expected_solution'"
     exit 1
 fi
+
+# Copy the program to current directory
+rm curr_prog*
+cp "$PROGRAM_PATH" curr_prog.cpp
+
+# Compile the program
+echo "Compiling program..."
+g++ -std=c++17 -Wall -Wextra -O2 curr_prog.cpp -o curr_prog
+if [ $? -ne 0 ]; then
+    echo "Error: Compilation failed!"
+    exit 1
+fi
+echo "Compilation successful."
 
 # Count total number of tests
 total_tests=$(grep -c "" "$TESTS_FILE")
@@ -34,8 +47,8 @@ verify_solution() {
     local shuffle="$1"
     local expected_solution="$2"
     
-    # Run the solver and capture the output
-    output=$(./3cube_solver --shuffle "$shuffle" --use_hash)
+    # Run the program and capture the output
+    output=$(./curr_prog --shuffle "$shuffle" --use_hash)
     
     # Extract the solution sequence using grep and sed
     actual_solution=$(echo "$output" | grep -a "Solution sequence:" | sed 's/Solution sequence: //')
