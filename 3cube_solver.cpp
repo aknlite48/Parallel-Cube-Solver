@@ -3,6 +3,7 @@
 #include <algorithm>
 #include <vector>
 #include <unordered_map>
+#include <unordered_set>
 #include <queue>
 #include <set>
 #include <random>
@@ -185,6 +186,16 @@ void MOVE(vector<uint8_t>& c,uint8_t &m) {
 // 	return shuff;
 // }
 
+struct VectorHash {
+    size_t operator()(const vector<uint8_t>& v) const {
+        size_t hash = 0;
+        for (size_t i = 0; i < v.size(); ++i) {
+            hash = hash * 31 + v[i];
+        }
+        return hash;
+    }
+};
+
 void MOVE_FROM_SEQ(vector<uint8_t>& c,vector<uint8_t>& seq) {
 	for (uint8_t &i: seq) {
 		MOVE(c,i);
@@ -270,7 +281,7 @@ vector<uint8_t> SOLVE_E(vector<uint8_t>& c,bool use_hash) { //cuts down memory b
 	queue<vector<uint8_t>> Q;
 	std::vector<uint8_t>::size_type depth = 0;
 
-	set<vector<uint8_t> > visited;
+	unordered_set<vector<uint8_t> ,VectorHash> visited;
 	int visits=0;
 
     //load single move states
@@ -428,7 +439,7 @@ struct CUBE_STATE {
 	else {
 	vector<uint8_t> c_orig = c;
 	vector<uint8_t> sol;
-	set<vector<uint8_t> > visited;
+	unordered_set<vector<uint8_t> ,VectorHash> visited;
 	if (c_orig==SOLVED) {
 		cout << "already solved" << endl;
 		return sol;
