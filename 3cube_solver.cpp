@@ -208,6 +208,76 @@ struct VectorHash {
     }
 };
 
+struct CompactSequence {
+    uint64_t packed_moves;
+    uint8_t length;
+    
+    // Default constructor
+    CompactSequence() : packed_moves(0), length(0) {}
+    
+    // Constructor from vector<uint8_t>
+    CompactSequence(const vector<uint8_t>& moves) : packed_moves(0), length(0) {
+        for (const uint8_t& move : moves) {
+            if (length < 16) { // Ensure we don't exceed capacity
+                addMove(move);
+            }
+        }
+    }
+    
+    // Add a single move
+    void addMove(uint8_t move) {
+        if (length < 16) { // Check capacity
+            packed_moves |= (static_cast<uint64_t>(move & 0xF) << (length * 4));
+            length++;
+        }
+    }
+    
+    // Get a move at a specific index
+    uint8_t getMove(uint8_t index) const {
+        if (index < length) {
+            return (packed_moves >> (index * 4)) & 0xF;
+        }
+        return 0; // Or some error value
+    }
+    
+    // Convert back to vector<uint8_t>
+    vector<uint8_t> toVector() const {
+        vector<uint8_t> result(length);
+        for (uint8_t i = 0; i < length; i++) {
+            result[i] = getMove(i);
+        }
+        return result;
+    }
+    
+    // Push back (like vector)
+    void push_back(uint8_t move) {
+        addMove(move);
+    }
+    
+    // Access operator (like vector)
+    uint8_t operator[](uint8_t index) const {
+        return getMove(index);
+    }
+    
+    // Size accessor (like vector)
+    uint8_t size() const {
+        return length;
+    }
+    
+    // Check if empty
+    bool empty() const {
+        return length == 0;
+    }
+    
+    // Back element (like vector)
+    uint8_t back() const {
+        if (length > 0) {
+            return getMove(length - 1);
+        }
+        return 0; // Or some error value
+    }
+};
+
 
 void MOVE_CUBE(CubeState& c, uint8_t& m) {
     uint8_t temp;
@@ -424,25 +494,25 @@ vector<uint8_t> SOLVE_E(vector<uint8_t>& c,bool use_hash) { //cuts down memory b
         cout << "already solved" << endl;
         return sol;
     }
-    queue<vector<uint8_t>> Q;
+    queue<CompactSequence> Q;
     std::vector<uint8_t>::size_type depth = 0;
 
     //load single move states
     for (uint8_t &i: MOVE_LIST) {
         //vector<uint8_t> c1 = c_orig;
         //MOVE(c1,i);
-        Q.push(vector<uint8_t> {i});
+        Q.push(CompactSequence({i}));
     }
     //load double move states
     for (auto &i: MOVE_LIST) {
         for (auto &j: MOVES[i]) {
-            Q.push(vector<uint8_t> {i,j});
+            Q.push(CompactSequence({i,j}));
         }
     }
     int k=1;
 
     while(!Q.empty()) {
-        vector<uint8_t> s_i = Q.front();
+        auto s_i = Q.front();
         Q.pop();
 
         if (k%10000==0) {
@@ -453,11 +523,12 @@ vector<uint8_t> SOLVE_E(vector<uint8_t>& c,bool use_hash) { //cuts down memory b
             depth=s_i.size();
         }
         CubeState c_i(c_orig);
-        for (uint8_t &i: s_i) {
-            MOVE_CUBE(c_i,i);
+        for (uint8_t i = 0; i < s_i.size(); i++) {
+            uint8_t move = s_i[i];
+            MOVE_CUBE(c_i, move);
         }
         if (c_i==SOLVED) {
-            sol = s_i;
+            sol = s_i.toVector();
             cout << " " << endl;
             //cout << "\r" << "Current depth: " << depth << " Nodes searched: " << k << " Nodes remaining: " << Q.size();
             cout << "Solution found" << endl;
@@ -465,14 +536,14 @@ vector<uint8_t> SOLVE_E(vector<uint8_t>& c,bool use_hash) { //cuts down memory b
         }
         if ((s_i.size()>1) && (s_i.back()==s_i[s_i.size()-2])) { //memory safe s_i.size()>1 check but can be optimized
             for (uint8_t &i: MOVES_DOUB[s_i.back()]) {
-                vector<uint8_t> s_ii = s_i;
+                CompactSequence s_ii(s_i);
                 s_ii.push_back(i);
                 Q.push(s_ii);
             }
         }
         else {
             for (uint8_t &i: MOVES[s_i.back()]) {
-                vector<uint8_t> s_ii = s_i;
+                CompactSequence s_ii(s_i);
                 s_ii.push_back(i);
                 Q.push(s_ii);
             }
@@ -491,7 +562,7 @@ vector<uint8_t> SOLVE_E(vector<uint8_t>& c,bool use_hash) { //cuts down memory b
         cout << "already solved" << endl;
         return sol;
     }
-    queue<vector<uint8_t>> Q;
+    queue<CompactSequence> Q;
     std::vector<uint8_t>::size_type depth = 0;
 
     unordered_set<CubeState ,CubeStateHash> visited;
@@ -501,18 +572,18 @@ vector<uint8_t> SOLVE_E(vector<uint8_t>& c,bool use_hash) { //cuts down memory b
     for (uint8_t &i: MOVE_LIST) {
         //vector<uint8_t> c1 = c_orig;
         //MOVE(c1,i);
-        Q.push(vector<uint8_t> {i});
+        Q.push(CompactSequence({i}));
     }
     //load double move states
     for (auto &i: MOVE_LIST) {
         for (auto &j: MOVES[i]) {
-            Q.push(vector<uint8_t> {i,j});
+            Q.push(CompactSequence({i,j}));
         }
     }
     int k=1;
 
     while(!Q.empty()) {
-        vector<uint8_t> s_i = Q.front();
+        auto s_i = Q.front();
         Q.pop();
 
         if (k%10000==0) {
@@ -525,8 +596,9 @@ vector<uint8_t> SOLVE_E(vector<uint8_t>& c,bool use_hash) { //cuts down memory b
 
         //vector<uint8_t> c_i = c_orig;
         CubeState c_i = c_orig; //create copy
-        for (uint8_t &i: s_i) {
-            MOVE_CUBE(c_i,i);
+        for (uint8_t i = 0; i < s_i.size(); i++) {
+            uint8_t move = s_i[i];
+            MOVE_CUBE(c_i, move);
         }
         if (visited.count(c_i)) {
             visits++;
@@ -538,7 +610,7 @@ vector<uint8_t> SOLVE_E(vector<uint8_t>& c,bool use_hash) { //cuts down memory b
 
 
         if (c_i==solved) {
-            sol = s_i;
+            sol = s_i.toVector();
             cout << " " << endl;
             //cout << "\r" << "Current depth: " << depth << " Nodes searched: " << k << " Nodes remaining: " << Q.size();
             cout << "Solution found " << "Revisits: " << visits << endl;
@@ -546,14 +618,16 @@ vector<uint8_t> SOLVE_E(vector<uint8_t>& c,bool use_hash) { //cuts down memory b
         }
         if ((s_i.size()>1) && (s_i.back()==s_i[s_i.size()-2])) { //memory safe s_i.size()>1 check but can be optimized
             for (uint8_t &i: MOVES_DOUB[s_i.back()]) {
-                vector<uint8_t> s_ii = s_i;
+                //vector<uint8_t> s_ii = s_i;
+                CompactSequence s_ii(s_i);
                 s_ii.push_back(i);
                 Q.push(s_ii);
             }
         }
         else {
             for (uint8_t &i: MOVES[s_i.back()]) {
-                vector<uint8_t> s_ii = s_i;
+                //vector<uint8_t> s_ii = s_i;
+                CompactSequence s_ii(s_i);
                 s_ii.push_back(i);
                 Q.push(s_ii);
             }
