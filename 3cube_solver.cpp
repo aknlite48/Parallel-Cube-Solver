@@ -695,7 +695,7 @@ vector<uint8_t> SOLVE_E(vector<uint8_t>& c,bool use_hash) { //cuts down memory b
         return sol;
     }
     queue<CompactSequence> Q;
-    std::vector<uint8_t>::size_type depth = 0;
+    uint8_t depth = 0;
 
     //load single move states
     for (uint8_t &i: MOVE_LIST) {
@@ -716,7 +716,7 @@ vector<uint8_t> SOLVE_E(vector<uint8_t>& c,bool use_hash) { //cuts down memory b
         Q.pop();
 
         if (k%10000==0) {
-        cout << "\r" << "Current depth: " << depth << " Nodes searched: " << k << " Nodes remaining: " << Q.size();
+        cout << "\r" << "Current depth: " << (int)depth << " Nodes searched: " << k << " Nodes remaining: " << Q.size();
             if (s_i.size()>depth) {
                 depth=s_i.size();
             }
@@ -764,7 +764,7 @@ vector<uint8_t> SOLVE_E(vector<uint8_t>& c,bool use_hash) { //cuts down memory b
         return sol;
     }
     queue<CompactSequence> Q;
-    std::vector<uint8_t>::size_type depth = 0;
+    uint8_t depth = 0;
 
     unordered_set<CubeState ,CubeStateHash> visited;
     int visits=0;
@@ -788,7 +788,7 @@ vector<uint8_t> SOLVE_E(vector<uint8_t>& c,bool use_hash) { //cuts down memory b
         Q.pop();
 
         if (k%10000==0) {
-        cout << "\r" << "Current depth: " << depth << " Nodes searched: " << k << " Nodes remaining: " << Q.size();
+        cout << "\r" << "Current depth: " << (int)depth << " Nodes searched: " << k << " Nodes remaining: " << Q.size();
             if (s_i.size()>depth) {
                 depth=s_i.size();
             }
