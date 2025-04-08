@@ -2,6 +2,7 @@
 tests/Makefile
 tests/*.cpp
 tests/curr_prog
+legacy*
 
 **/.DS_Store
 *.out
