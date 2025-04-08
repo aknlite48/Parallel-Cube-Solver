@@ -477,6 +477,206 @@ void MOVE_CUBE(CubeState& c, uint8_t& m) {
     }
 }
 
+void MOVE_CUBE_SEQUENCE(CubeState& c, CompactSequence& s) {
+    for (uint8_t i = 0; i < s.size(); i++) {
+        uint8_t temp;
+        
+        switch (s[i]) {
+            case u:
+                // Cycle c[0] -> c[5] -> c[7] -> c[2]
+                temp = c.positions[0];
+                c.positions[0] = c.positions[5];
+                c.positions[5] = c.positions[7];
+                c.positions[7] = c.positions[2];
+                c.positions[2] = temp;
+                
+                // Cycle c[1] -> c[3] -> c[6] -> c[4]
+                temp = c.positions[1];
+                c.positions[1] = c.positions[3];
+                c.positions[3] = c.positions[6];
+                c.positions[6] = c.positions[4];
+                c.positions[4] = temp;
+                break;
+                
+            case ui:
+                // Cycle c[0] -> c[2] -> c[7] -> c[5]
+                temp = c.positions[0];
+                c.positions[0] = c.positions[2];
+                c.positions[2] = c.positions[7];
+                c.positions[7] = c.positions[5];
+                c.positions[5] = temp;
+                
+                // Cycle c[1] -> c[4] -> c[6] -> c[3]
+                temp = c.positions[1];
+                c.positions[1] = c.positions[4];
+                c.positions[4] = c.positions[6];
+                c.positions[6] = c.positions[3];
+                c.positions[3] = temp;
+                break;
+                
+            case d:
+                // Cycle c[12] -> c[14] -> c[19] -> c[17]
+                temp = c.positions[12];
+                c.positions[12] = c.positions[14];
+                c.positions[14] = c.positions[19];
+                c.positions[19] = c.positions[17];
+                c.positions[17] = temp;
+                
+                // Cycle c[13] -> c[16] -> c[18] -> c[15]
+                temp = c.positions[13];
+                c.positions[13] = c.positions[16];
+                c.positions[16] = c.positions[18];
+                c.positions[18] = c.positions[15];
+                c.positions[15] = temp;
+                break;
+                
+            case di:
+                // Cycle c[12] -> c[17] -> c[19] -> c[14]
+                temp = c.positions[12];
+                c.positions[12] = c.positions[17];
+                c.positions[17] = c.positions[19];
+                c.positions[19] = c.positions[14];
+                c.positions[14] = temp;
+                
+                // Cycle c[15] -> c[18] -> c[16] -> c[13]
+                temp = c.positions[15];
+                c.positions[15] = c.positions[18];
+                c.positions[18] = c.positions[16];
+                c.positions[16] = c.positions[13];
+                c.positions[13] = temp;
+                break;
+                
+            case r:
+                // Cycle c[7] -> c[19] -> c[14] -> c[2]
+                temp = c.positions[7];
+                c.positions[7] = c.positions[19];
+                c.positions[19] = c.positions[14];
+                c.positions[14] = c.positions[2];
+                c.positions[2] = temp;
+                
+                // Cycle c[4] -> c[11] -> c[16] -> c[9]
+                temp = c.positions[4];
+                c.positions[4] = c.positions[11];
+                c.positions[11] = c.positions[16];
+                c.positions[16] = c.positions[9];
+                c.positions[9] = temp;
+                break;
+                
+            case ri:
+                // Cycle c[7] -> c[2] -> c[14] -> c[19]
+                temp = c.positions[7];
+                c.positions[7] = c.positions[2];
+                c.positions[2] = c.positions[14];
+                c.positions[14] = c.positions[19];
+                c.positions[19] = temp;
+                
+                // Cycle c[4] -> c[9] -> c[16] -> c[11]
+                temp = c.positions[4];
+                c.positions[4] = c.positions[9];
+                c.positions[9] = c.positions[16];
+                c.positions[16] = c.positions[11];
+                c.positions[11] = temp;
+                break;
+                
+            case l:
+                // Cycle c[0] -> c[12] -> c[17] -> c[5]
+                temp = c.positions[0];
+                c.positions[0] = c.positions[12];
+                c.positions[12] = c.positions[17];
+                c.positions[17] = c.positions[5];
+                c.positions[5] = temp;
+                
+                // Cycle c[3] -> c[8] -> c[15] -> c[10]
+                temp = c.positions[3];
+                c.positions[3] = c.positions[8];
+                c.positions[8] = c.positions[15];
+                c.positions[15] = c.positions[10];
+                c.positions[10] = temp;
+                break;
+                
+            case li:
+                // Cycle c[0] -> c[5] -> c[17] -> c[12]
+                temp = c.positions[0];
+                c.positions[0] = c.positions[5];
+                c.positions[5] = c.positions[17];
+                c.positions[17] = c.positions[12];
+                c.positions[12] = temp;
+                
+                // Cycle c[3] -> c[10] -> c[15] -> c[8]
+                temp = c.positions[3];
+                c.positions[3] = c.positions[10];
+                c.positions[10] = c.positions[15];
+                c.positions[15] = c.positions[8];
+                c.positions[8] = temp;
+                break;
+                
+            case f:
+                // Cycle c[5] -> c[17] -> c[19] -> c[7]
+                temp = c.positions[5];
+                c.positions[5] = c.positions[17];
+                c.positions[17] = c.positions[19];
+                c.positions[19] = c.positions[7];
+                c.positions[7] = temp;
+                
+                // Cycle c[6] -> c[10] -> c[18] -> c[11]
+                temp = c.positions[6];
+                c.positions[6] = c.positions[10];
+                c.positions[10] = c.positions[18];
+                c.positions[18] = c.positions[11];
+                c.positions[11] = temp;
+                break;
+                
+            case fi:
+                // Cycle c[5] -> c[7] -> c[19] -> c[17]
+                temp = c.positions[5];
+                c.positions[5] = c.positions[7];
+                c.positions[7] = c.positions[19];
+                c.positions[19] = c.positions[17];
+                c.positions[17] = temp;
+                
+                // Cycle c[6] -> c[11] -> c[18] -> c[10]
+                temp = c.positions[6];
+                c.positions[6] = c.positions[11];
+                c.positions[11] = c.positions[18];
+                c.positions[18] = c.positions[10];
+                c.positions[10] = temp;
+                break;
+                
+            case b:
+                // Cycle c[0] -> c[2] -> c[14] -> c[12]
+                temp = c.positions[0];
+                c.positions[0] = c.positions[2];
+                c.positions[2] = c.positions[14];
+                c.positions[14] = c.positions[12];
+                c.positions[12] = temp;
+                
+                // Cycle c[1] -> c[9] -> c[13] -> c[8]
+                temp = c.positions[1];
+                c.positions[1] = c.positions[9];
+                c.positions[9] = c.positions[13];
+                c.positions[13] = c.positions[8];
+                c.positions[8] = temp;
+                break;
+                
+            case bi:
+                // Cycle c[0] -> c[12] -> c[14] -> c[2]
+                temp = c.positions[0];
+                c.positions[0] = c.positions[12];
+                c.positions[12] = c.positions[14];
+                c.positions[14] = c.positions[2];
+                c.positions[2] = temp;
+                
+                // Cycle c[1] -> c[8] -> c[13] -> c[9]
+                temp = c.positions[1];
+                c.positions[1] = c.positions[8];
+                c.positions[8] = c.positions[13];
+                c.positions[13] = c.positions[9];
+                c.positions[9] = temp;
+                break;
+            }
+    }
+}
+
 void MOVE_FROM_SEQ(vector<uint8_t>& c,vector<uint8_t>& seq) {
     for (uint8_t &i: seq) {
         MOVE(c,i);
@@ -517,17 +717,16 @@ vector<uint8_t> SOLVE_E(vector<uint8_t>& c,bool use_hash) { //cuts down memory b
 
         if (k%10000==0) {
         cout << "\r" << "Current depth: " << depth << " Nodes searched: " << k << " Nodes remaining: " << Q.size();
+            if (s_i.size()>depth) {
+                depth=s_i.size();
+            }
         }
 
-        if (s_i.size()>depth) {
-            depth=s_i.size();
-        }
+
         CubeState c_i(c_orig);
-        for (uint8_t i = 0; i < s_i.size(); i++) {
-            uint8_t move = s_i[i];
-            MOVE_CUBE(c_i, move);
-        }
-        if (c_i==SOLVED) {
+        MOVE_CUBE_SEQUENCE(c_i,s_i);
+
+        if (c_i==solved) {
             sol = s_i.toVector();
             cout << " " << endl;
             //cout << "\r" << "Current depth: " << depth << " Nodes searched: " << k << " Nodes remaining: " << Q.size();
@@ -598,10 +797,7 @@ vector<uint8_t> SOLVE_E(vector<uint8_t>& c,bool use_hash) { //cuts down memory b
 
         //vector<uint8_t> c_i = c_orig;
         CubeState c_i = c_orig; //create copy
-        for (uint8_t i = 0; i < s_i.size(); i++) {
-            uint8_t move = s_i[i];
-            MOVE_CUBE(c_i, move);
-        }
+        MOVE_CUBE_SEQUENCE(c_i,s_i);
         if (visited.count(c_i)) {
             visits++;
             continue;
