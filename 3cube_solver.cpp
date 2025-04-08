@@ -535,14 +535,16 @@ vector<uint8_t> SOLVE_E(vector<uint8_t>& c,bool use_hash) { //cuts down memory b
             break;
         }
         if ((s_i.size()>1) && (s_i.back()==s_i[s_i.size()-2])) { //memory safe s_i.size()>1 check but can be optimized
-            for (uint8_t &i: MOVES_DOUB[s_i.back()]) {
+            const vector<uint8_t>& allowed_moves = MOVES_DOUB[s_i.back()];
+            for (auto &i: allowed_moves) {
                 CompactSequence s_ii(s_i);
                 s_ii.push_back(i);
                 Q.push(s_ii);
             }
         }
         else {
-            for (uint8_t &i: MOVES[s_i.back()]) {
+            const vector<uint8_t>& allowed_moves = MOVES_DOUB[s_i.back()];
+            for (auto &i: allowed_moves) {
                 CompactSequence s_ii(s_i);
                 s_ii.push_back(i);
                 Q.push(s_ii);
@@ -617,21 +619,21 @@ vector<uint8_t> SOLVE_E(vector<uint8_t>& c,bool use_hash) { //cuts down memory b
             break;
         }
         if ((s_i.size()>1) && (s_i.back()==s_i[s_i.size()-2])) { //memory safe s_i.size()>1 check but can be optimized
-            for (uint8_t &i: MOVES_DOUB[s_i.back()]) {
-                //vector<uint8_t> s_ii = s_i;
+            const vector<uint8_t>& allowed_moves = MOVES_DOUB[s_i.back()];
+            for (auto &i: allowed_moves) {
                 CompactSequence s_ii(s_i);
                 s_ii.push_back(i);
                 Q.push(s_ii);
             }
         }
         else {
-            for (uint8_t &i: MOVES[s_i.back()]) {
-                //vector<uint8_t> s_ii = s_i;
+            const vector<uint8_t>& allowed_moves = MOVES_DOUB[s_i.back()];
+            for (auto &i: allowed_moves) {
                 CompactSequence s_ii(s_i);
                 s_ii.push_back(i);
                 Q.push(s_ii);
             }
-        }   
+        }  
         k++;
 
     }
