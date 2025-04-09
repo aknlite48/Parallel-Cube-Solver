@@ -867,7 +867,6 @@ vector<uint8_t> SOLVE_E(vector<uint8_t>& c,bool use_hash) { //cuts down memory b
         return sol;
     }
     queue<CompactSequence> Q;
-    uint8_t depth = 0;
 
     //load single move states
     for (uint8_t &i: MOVE_LIST) {
@@ -886,12 +885,10 @@ vector<uint8_t> SOLVE_E(vector<uint8_t>& c,bool use_hash) { //cuts down memory b
     while(!Q.empty()) {
         auto s_i = Q.front();
         Q.pop();
+        uint8_t seq_size = s_i.size();
 
         if (k%10000==0) {
-        cout << "\r" << "Current depth: " << (int)depth << " Nodes searched: " << k << " Nodes remaining: " << Q.size();
-            if (s_i.size()>depth) {
-                depth=s_i.size();
-            }
+        cout << "\r" << "Current depth: " << (int)seq_size << " Nodes searched: " << k << " Nodes remaining: " << Q.size();
         }
 
 
@@ -906,7 +903,6 @@ vector<uint8_t> SOLVE_E(vector<uint8_t>& c,bool use_hash) { //cuts down memory b
             break;
         }
 
-        uint8_t seq_size = s_i.size();
         auto last_move = s_i.back();
         //const vector<uint8_t>& allowed_moves = ((seq_size>1) && (last_move==s_i[seq_size-2])) ? MOVES_DOUB[last_move] : MOVES[last_move] ;
         const vector<uint8_t>& allowed_moves = (seq_size>1) ? MOVES_LOOKUP[s_i[seq_size-2]][last_move] : MOVES[last_move];
@@ -930,7 +926,7 @@ vector<uint8_t> SOLVE_E(vector<uint8_t>& c,bool use_hash) { //cuts down memory b
         return sol;
     }
     queue<CompactSequence> Q;
-    uint8_t depth = 0;
+
 
     unordered_set<CubeState ,CubeStateHash> visited;
     int visits=0;
@@ -952,12 +948,10 @@ vector<uint8_t> SOLVE_E(vector<uint8_t>& c,bool use_hash) { //cuts down memory b
     while(!Q.empty()) {
         auto s_i = Q.front();
         Q.pop();
+        uint8_t seq_size = s_i.size();
 
         if (k%10000==0) {
-        cout << "\r" << "Current depth: " << (int)depth << " Nodes searched: " << k << " Nodes remaining: " << Q.size();
-            if (s_i.size()>depth) {
-                depth=s_i.size();
-            }
+        cout << "\r" << "Current depth: " << (int)seq_size << " Nodes searched: " << k << " Nodes remaining: " << Q.size();
         }
 
 
@@ -981,7 +975,7 @@ vector<uint8_t> SOLVE_E(vector<uint8_t>& c,bool use_hash) { //cuts down memory b
             break;
         }
         
-        uint8_t seq_size = s_i.size();
+
         auto last_move = s_i.back();
         //const vector<uint8_t>& allowed_moves = ((seq_size>1) && (last_move==s_i[seq_size-2])) ? MOVES_DOUB[last_move] : MOVES[last_move] ;
         const vector<uint8_t>& allowed_moves = (seq_size>1) ? MOVES_LOOKUP[s_i[seq_size-2]][last_move] : MOVES[last_move];
