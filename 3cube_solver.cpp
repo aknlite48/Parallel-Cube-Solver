@@ -72,6 +72,177 @@ vector< vector<uint8_t> > MOVES_DOUB = {
     {u,ui,d,di,r,ri,l,li,f,fi}
 };
 
+vector<vector<vector<uint8_t>>> MOVES_LOOKUP = {
+    { // After move 0 (u)
+        {d,di,r,ri,l,li,f,fi,b,bi}, // After 0 (u) - double move
+        {d,di,r,ri,l,li,f,fi,b,bi}, // After 1 (ui) - same face
+        {r,ri,l,li,f,fi,b,bi}, // After 2 (d) - opposite face
+        {r,ri,l,li,f,fi,b,bi}, // After 3 (di) - opposite face
+        {u,d,di,r,l,li,f,fi,b,bi}, // After 4 (r)
+        {u,d,di,ri,l,li,f,fi,b,bi}, // After 5 (ri)
+        {u,d,di,r,ri,l,f,fi,b,bi}, // After 6 (l)
+        {u,d,di,r,ri,li,f,fi,b,bi}, // After 7 (li)
+        {u,d,di,r,ri,l,li,f,b,bi}, // After 8 (f)
+        {u,d,di,r,ri,l,li,fi,b,bi}, // After 9 (fi)
+        {u,d,di,r,ri,l,li,f,fi,b}, // After 10 (b)
+        {u,d,di,r,ri,l,li,f,fi,bi} // After 11 (bi)
+    },
+    { // After move 1 (ui)
+        {d,di,r,ri,l,li,f,fi,b,bi}, // After 0 (u) - same face
+        {d,di,r,ri,l,li,f,fi,b,bi}, // After 1 (ui) - double move
+        {r,ri,l,li,f,fi,b,bi}, // After 2 (d) - opposite face
+        {r,ri,l,li,f,fi,b,bi}, // After 3 (di) - opposite face
+        {ui,d,di,r,l,li,f,fi,b,bi}, // After 4 (r)
+        {ui,d,di,ri,l,li,f,fi,b,bi}, // After 5 (ri)
+        {ui,d,di,r,ri,l,f,fi,b,bi}, // After 6 (l)
+        {ui,d,di,r,ri,li,f,fi,b,bi}, // After 7 (li)
+        {ui,d,di,r,ri,l,li,f,b,bi}, // After 8 (f)
+        {ui,d,di,r,ri,l,li,fi,b,bi}, // After 9 (fi)
+        {ui,d,di,r,ri,l,li,f,fi,b}, // After 10 (b)
+        {ui,d,di,r,ri,l,li,f,fi,bi} // After 11 (bi)
+    },
+    { // After move 2 (d)
+        {r,ri,l,li,f,fi,b,bi}, // After 0 (u) - opposite face
+        {r,ri,l,li,f,fi,b,bi}, // After 1 (ui) - opposite face
+        {u,ui,r,ri,l,li,f,fi,b,bi}, // After 2 (d) - double move
+        {u,ui,r,ri,l,li,f,fi,b,bi}, // After 3 (di) - same face
+        {u,ui,d,r,l,li,f,fi,b,bi}, // After 4 (r)
+        {u,ui,d,ri,l,li,f,fi,b,bi}, // After 5 (ri)
+        {u,ui,d,r,ri,l,f,fi,b,bi}, // After 6 (l)
+        {u,ui,d,r,ri,li,f,fi,b,bi}, // After 7 (li)
+        {u,ui,d,r,ri,l,li,f,b,bi}, // After 8 (f)
+        {u,ui,d,r,ri,l,li,fi,b,bi}, // After 9 (fi)
+        {u,ui,d,r,ri,l,li,f,fi,b}, // After 10 (b)
+        {u,ui,d,r,ri,l,li,f,fi,bi} // After 11 (bi)
+    },
+    { // After move 3 (di)
+        {r,ri,l,li,f,fi,b,bi}, // After 0 (u) - opposite face
+        {r,ri,l,li,f,fi,b,bi}, // After 1 (ui) - opposite face
+        {u,ui,r,ri,l,li,f,fi,b,bi}, // After 2 (d) - same face
+        {u,ui,r,ri,l,li,f,fi,b,bi}, // After 3 (di) - double move
+        {u,ui,di,r,l,li,f,fi,b,bi}, // After 4 (r)
+        {u,ui,di,ri,l,li,f,fi,b,bi}, // After 5 (ri)
+        {u,ui,di,r,ri,l,f,fi,b,bi}, // After 6 (l)
+        {u,ui,di,r,ri,li,f,fi,b,bi}, // After 7 (li)
+        {u,ui,di,r,ri,l,li,f,b,bi}, // After 8 (f)
+        {u,ui,di,r,ri,l,li,fi,b,bi}, // After 9 (fi)
+        {u,ui,di,r,ri,l,li,f,fi,b}, // After 10 (b)
+        {u,ui,di,r,ri,l,li,f,fi,bi} // After 11 (bi)
+    },
+    { // After move 4 (r)
+        {u,d,di,r,l,li,f,fi,b,bi}, // After 0 (u)
+        {ui,d,di,r,l,li,f,fi,b,bi}, // After 1 (ui)
+        {u,ui,d,r,l,li,f,fi,b,bi}, // After 2 (d)
+        {u,ui,di,r,l,li,f,fi,b,bi}, // After 3 (di)
+        {u,ui,d,di,l,li,f,fi,b,bi}, // After 4 (r) - double move
+        {u,ui,d,di,l,li,f,fi,b,bi}, // After 5 (ri) - same face
+        {u,ui,d,di,f,fi,b,bi}, // After 6 (l) - opposite face
+        {u,ui,d,di,f,fi,b,bi}, // After 7 (li) - opposite face
+        {u,ui,d,di,r,l,li,f,b,bi}, // After 8 (f)
+        {u,ui,d,di,r,l,li,fi,b,bi}, // After 9 (fi)
+        {u,ui,d,di,r,l,li,f,fi,b}, // After 10 (b)
+        {u,ui,d,di,r,l,li,f,fi,bi} // After 11 (bi)
+    },
+    { // After move 5 (ri)
+        {u,d,di,ri,l,li,f,fi,b,bi}, // After 0 (u)
+        {ui,d,di,ri,l,li,f,fi,b,bi}, // After 1 (ui)
+        {u,ui,d,ri,l,li,f,fi,b,bi}, // After 2 (d)
+        {u,ui,di,ri,l,li,f,fi,b,bi}, // After 3 (di)
+        {u,ui,d,di,l,li,f,fi,b,bi}, // After 4 (r) - same face
+        {u,ui,d,di,l,li,f,fi,b,bi}, // After 5 (ri) - double move
+        {u,ui,d,di,f,fi,b,bi}, // After 6 (l) - opposite face
+        {u,ui,d,di,f,fi,b,bi}, // After 7 (li) - opposite face
+        {u,ui,d,di,ri,l,li,f,b,bi}, // After 8 (f)
+        {u,ui,d,di,ri,l,li,fi,b,bi}, // After 9 (fi)
+        {u,ui,d,di,ri,l,li,f,fi,b}, // After 10 (b)
+        {u,ui,d,di,ri,l,li,f,fi,bi} // After 11 (bi)
+    },
+    { // After move 6 (l)
+        {u,d,di,r,ri,l,f,fi,b,bi}, // After 0 (u)
+        {ui,d,di,r,ri,l,f,fi,b,bi}, // After 1 (ui)
+        {u,ui,d,r,ri,l,f,fi,b,bi}, // After 2 (d)
+        {u,ui,di,r,ri,l,f,fi,b,bi}, // After 3 (di)
+        {u,ui,d,di,f,fi,b,bi}, // After 4 (r) - opposite face
+        {u,ui,d,di,f,fi,b,bi}, // After 5 (ri) - opposite face
+        {u,ui,d,di,r,ri,f,fi,b,bi}, // After 6 (l) - double move
+        {u,ui,d,di,r,ri,f,fi,b,bi}, // After 7 (li) - same face
+        {u,ui,d,di,r,ri,l,f,b,bi}, // After 8 (f)
+        {u,ui,d,di,r,ri,l,fi,b,bi}, // After 9 (fi)
+        {u,ui,d,di,r,ri,l,f,fi,b}, // After 10 (b)
+        {u,ui,d,di,r,ri,l,f,fi,bi} // After 11 (bi)
+    },
+    { // After move 7 (li)
+        {u,d,di,r,ri,li,f,fi,b,bi}, // After 0 (u)
+        {ui,d,di,r,ri,li,f,fi,b,bi}, // After 1 (ui)
+        {u,ui,d,r,ri,li,f,fi,b,bi}, // After 2 (d)
+        {u,ui,di,r,ri,li,f,fi,b,bi}, // After 3 (di)
+        {u,ui,d,di,f,fi,b,bi}, // After 4 (r) - opposite face
+        {u,ui,d,di,f,fi,b,bi}, // After 5 (ri) - opposite face
+        {u,ui,d,di,r,ri,f,fi,b,bi}, // After 6 (l) - same face
+        {u,ui,d,di,r,ri,f,fi,b,bi}, // After 7 (li) - double move
+        {u,ui,d,di,r,ri,li,f,b,bi}, // After 8 (f)
+        {u,ui,d,di,r,ri,li,fi,b,bi}, // After 9 (fi)
+        {u,ui,d,di,r,ri,li,f,fi,b}, // After 10 (b)
+        {u,ui,d,di,r,ri,li,f,fi,bi} // After 11 (bi)
+    },
+    { // After move 8 (f)
+        {u,d,di,r,ri,l,li,f,b,bi}, // After 0 (u)
+        {ui,d,di,r,ri,l,li,f,b,bi}, // After 1 (ui)
+        {u,ui,d,r,ri,l,li,f,b,bi}, // After 2 (d)
+        {u,ui,di,r,ri,l,li,f,b,bi}, // After 3 (di)
+        {u,ui,d,di,r,l,li,f,b,bi}, // After 4 (r)
+        {u,ui,d,di,ri,l,li,f,b,bi}, // After 5 (ri)
+        {u,ui,d,di,r,ri,l,f,b,bi}, // After 6 (l)
+        {u,ui,d,di,r,ri,li,f,b,bi}, // After 7 (li)
+        {u,ui,d,di,r,ri,l,li,b,bi}, // After 8 (f) - double move
+        {u,ui,d,di,r,ri,l,li,b,bi}, // After 9 (fi) - same face
+        {u,ui,d,di,r,ri,l,li,b}, // After 10 (b) - opposite face
+        {u,ui,d,di,r,ri,l,li,b}, // After 11 (bi) - opposite face
+    },
+    { // After move 9 (fi)
+        {u,d,di,r,ri,l,li,fi,b,bi}, // After 0 (u)
+        {ui,d,di,r,ri,l,li,fi,b,bi}, // After 1 (ui)
+        {u,ui,d,r,ri,l,li,fi,b,bi}, // After 2 (d)
+        {u,ui,di,r,ri,l,li,fi,b,bi}, // After 3 (di)
+        {u,ui,d,di,r,l,li,fi,b,bi}, // After 4 (r)
+        {u,ui,d,di,ri,l,li,fi,b,bi}, // After 5 (ri)
+        {u,ui,d,di,r,ri,l,fi,b,bi}, // After 6 (l)
+        {u,ui,d,di,r,ri,li,fi,b,bi}, // After 7 (li)
+        {u,ui,d,di,r,ri,l,li,b,bi}, // After 8 (f) - same face
+        {u,ui,d,di,r,ri,l,li,b,bi}, // After 9 (fi) - double move
+        {u,ui,d,di,r,ri,l,li,b}, // After 10 (b) - opposite face
+        {u,ui,d,di,r,ri,l,li,b}, // After 11 (bi) - opposite face
+    },
+    { // After move 10 (b)
+        {u,d,di,r,ri,l,li,f,fi,b}, // After 0 (u)
+        {ui,d,di,r,ri,l,li,f,fi,b}, // After 1 (ui)
+        {u,ui,d,r,ri,l,li,f,fi,b}, // After 2 (d)
+        {u,ui,di,r,ri,l,li,f,fi,b}, // After 3 (di)
+        {u,ui,d,di,r,l,li,f,fi,b}, // After 4 (r)
+        {u,ui,d,di,ri,l,li,f,fi,b}, // After 5 (ri)
+        {u,ui,d,di,r,ri,l,f,fi,b}, // After 6 (l)
+        {u,ui,d,di,r,ri,li,f,fi,b}, // After 7 (li)
+        {u,ui,d,di,r,ri,l,li,b}, // After 8 (f) - opposite face
+        {u,ui,d,di,r,ri,l,li,b}, // After 9 (fi) - opposite face
+        {u,ui,d,di,r,ri,l,li,f,fi}, // After 10 (b) - double move
+        {u,ui,d,di,r,ri,l,li,f,fi} // After 11 (bi) - same face
+    },
+    { // After move 11 (bi)
+        {u,d,di,r,ri,l,li,f,fi,bi}, // After 0 (u)
+        {ui,d,di,r,ri,l,li,f,fi,bi}, // After 1 (ui)
+        {u,ui,d,r,ri,l,li,f,fi,bi}, // After 2 (d)
+        {u,ui,di,r,ri,l,li,f,fi,bi}, // After 3 (di)
+        {u,ui,d,di,r,l,li,f,fi,bi}, // After 4 (r)
+        {u,ui,d,di,ri,l,li,f,fi,bi}, // After 5 (ri)
+        {u,ui,d,di,r,ri,l,f,fi,bi}, // After 6 (l)
+        {u,ui,d,di,r,ri,li,f,fi,bi}, // After 7 (li)
+        {u,ui,d,di,r,ri,l,li,b}, // After 8 (f) - opposite face
+        {u,ui,d,di,r,ri,l,li,b}, // After 9 (fi) - opposite face
+        {u,ui,d,di,r,ri,l,li,f,fi}, // After 10 (b) - same face
+        {u,ui,d,di,r,ri,l,li,f,fi} // After 11 (bi) - double move
+    }
+};
+
 void MOVE(vector<uint8_t>& c,uint8_t &m) {
     switch (m) {
     case u:
@@ -736,7 +907,8 @@ vector<uint8_t> SOLVE_E(vector<uint8_t>& c,bool use_hash) { //cuts down memory b
 
         uint8_t seq_size = s_i.size();
         auto last_move = s_i.back();
-        const vector<uint8_t>& allowed_moves = ((seq_size>1) && (last_move==s_i[seq_size-2])) ? MOVES_DOUB[last_move] : MOVES[last_move] ;
+        //const vector<uint8_t>& allowed_moves = ((seq_size>1) && (last_move==s_i[seq_size-2])) ? MOVES_DOUB[last_move] : MOVES[last_move] ;
+        const vector<uint8_t>& allowed_moves = (seq_size>1) ? MOVES_LOOKUP[s_i[seq_size-2]][last_move] : MOVES[last_move];
         for (auto &i: allowed_moves) {
             CompactSequence s_ii(s_i);
             s_ii.push_back(i);
