@@ -72,7 +72,7 @@ vector< vector<uint8_t> > MOVES_DOUB = {
     {u,ui,d,di,r,ri,l,li,f,fi}
 };
 
-const vector<vector<vector<uint8_t>>> MOVES_LOOKUP = {
+static const vector<vector<vector<uint8_t>>> MOVES_LOOKUP = {
 {
     {d,di,r,ri,l,li,f,fi,b,bi},
     {d,di,r,ri,l,li,f,fi,b,bi},
