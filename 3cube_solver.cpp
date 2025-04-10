@@ -881,6 +881,42 @@ vector<uint8_t> SOLVE_E(vector<uint8_t>& c,bool use_hash) { //cuts down memory b
     }
     int k=1;
 
+    //solve single move sequence: pops out all single move sequences
+    int iter=0;
+    while(!Q.empty() && (iter<12)) {
+        auto s_i = Q.front();
+        Q.pop();
+        uint8_t seq_size = s_i.size();
+
+        if (k%10000==0) {
+        cout << "\r" << "Current depth: " << (int)seq_size << " Nodes searched: " << k << " Nodes remaining: " << Q.size();
+        }
+
+
+        CubeState c_i(c_orig);
+        MOVE_CUBE_SEQUENCE(c_i,s_i);
+
+        if (c_i==solved) {
+            sol = s_i.toVector();
+            cout << " " << endl;
+            //cout << "\r" << "Current depth: " << depth << " Nodes searched: " << k << " Nodes remaining: " << Q.size();
+            cout << "Solution found" << endl;
+            return sol;
+            //break;
+        }
+
+        auto last_move = s_i.back();
+        //const vector<uint8_t>& allowed_moves = ((seq_size>1) && (last_move==s_i[seq_size-2])) ? MOVES_DOUB[last_move] : MOVES[last_move] ;
+        const vector<uint8_t>& allowed_moves = MOVES[last_move];
+        for (auto &i: allowed_moves) {
+            CompactSequence s_ii(s_i);
+            s_ii.push_back(i);
+            Q.push(s_ii);
+        }
+        k++;iter++;
+
+    }
+
     while(!Q.empty()) {
         auto s_i = Q.front();
         Q.pop();
@@ -904,7 +940,8 @@ vector<uint8_t> SOLVE_E(vector<uint8_t>& c,bool use_hash) { //cuts down memory b
 
         auto last_move = s_i.back();
         //const vector<uint8_t>& allowed_moves = ((seq_size>1) && (last_move==s_i[seq_size-2])) ? MOVES_DOUB[last_move] : MOVES[last_move] ;
-        const vector<uint8_t>& allowed_moves = (seq_size>1) ? MOVES_LOOKUP[s_i[seq_size-2]][last_move] : MOVES[last_move];
+        //const vector<uint8_t>& allowed_moves = (seq_size>1) ? MOVES_LOOKUP[s_i[seq_size-2]][last_move] : MOVES[last_move];
+        const vector<uint8_t>& allowed_moves = MOVES_LOOKUP[s_i[seq_size-2]][last_move];
         for (auto &i: allowed_moves) {
             CompactSequence s_ii(s_i);
             s_ii.push_back(i);
@@ -943,6 +980,49 @@ vector<uint8_t> SOLVE_E(vector<uint8_t>& c,bool use_hash) { //cuts down memory b
         }
     }
     int k=1;
+
+    //solve single move sequence: pops out all single move sequences
+    int iter=0;
+    while(!Q.empty() && (iter<12)) {
+        auto s_i = Q.front();
+        Q.pop();
+        uint8_t seq_size = s_i.size();
+
+        if (k%10000==0) {
+        cout << "\r" << "Current depth: " << (int)seq_size << " Nodes searched: " << k << " Nodes remaining: " << Q.size();
+        }
+
+
+        CubeState c_i(c_orig);
+        MOVE_CUBE_SEQUENCE(c_i,s_i);
+        if (visited.count(c_i)) {
+            visits++;
+            continue;
+        }
+        else {
+            visited.insert(c_i);
+        }
+
+        if (c_i==solved) {
+            sol = s_i.toVector();
+            cout << " " << endl;
+            //cout << "\r" << "Current depth: " << depth << " Nodes searched: " << k << " Nodes remaining: " << Q.size();
+            cout << "Solution found" << endl;
+            return sol;
+            //break;
+        }
+
+        auto last_move = s_i.back();
+        //const vector<uint8_t>& allowed_moves = ((seq_size>1) && (last_move==s_i[seq_size-2])) ? MOVES_DOUB[last_move] : MOVES[last_move] ;
+        const vector<uint8_t>& allowed_moves = MOVES[last_move];
+        for (auto &i: allowed_moves) {
+            CompactSequence s_ii(s_i);
+            s_ii.push_back(i);
+            Q.push(s_ii);
+        }
+        k++;iter++;
+
+    }
 
     while(!Q.empty()) {
         auto s_i = Q.front();
