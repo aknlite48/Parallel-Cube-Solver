@@ -854,7 +854,7 @@ void MOVE_FROM_SEQ(vector<uint8_t>& c,vector<uint8_t>& seq) {
     }
 }
 
-vector<uint8_t> SOLVE_E(vector<uint8_t>& c,bool use_hash) { //cuts down memory by 1/4th
+vector<uint8_t> SOLVE_E(vector<uint8_t>& c,bool use_hash,uint8_t max_depth) { //cuts down memory by 1/4th
     vector<uint8_t> sol;
 
     if (!use_hash) {
@@ -937,16 +937,17 @@ vector<uint8_t> SOLVE_E(vector<uint8_t>& c,bool use_hash) { //cuts down memory b
             cout << "Solution found" << endl;
             break;
         }
-
-        auto last_move = s_i.back();
-        //const vector<uint8_t>& allowed_moves = ((seq_size>1) && (last_move==s_i[seq_size-2])) ? MOVES_DOUB[last_move] : MOVES[last_move] ;
-        //const vector<uint8_t>& allowed_moves = (seq_size>1) ? MOVES_LOOKUP[s_i[seq_size-2]][last_move] : MOVES[last_move];
-        const vector<uint8_t>& allowed_moves = MOVES_LOOKUP[s_i[seq_size-2]][last_move];
-        for (auto &i: allowed_moves) {
-            CompactSequence s_ii(s_i);
-            s_ii.push_back(i);
-            Q.push(s_ii);
-        }
+        if (seq_size<max_depth) {
+            auto last_move = s_i.back();
+            //const vector<uint8_t>& allowed_moves = ((seq_size>1) && (last_move==s_i[seq_size-2])) ? MOVES_DOUB[last_move] : MOVES[last_move] ;
+            //const vector<uint8_t>& allowed_moves = (seq_size>1) ? MOVES_LOOKUP[s_i[seq_size-2]][last_move] : MOVES[last_move];
+            const vector<uint8_t>& allowed_moves = MOVES_LOOKUP[s_i[seq_size-2]][last_move];
+            for (auto &i: allowed_moves) {
+                CompactSequence s_ii(s_i);
+                s_ii.push_back(i);
+                Q.push(s_ii);
+            }
+        }   
         k++;
 
     }
@@ -1055,14 +1056,17 @@ vector<uint8_t> SOLVE_E(vector<uint8_t>& c,bool use_hash) { //cuts down memory b
         }
         
 
-        auto last_move = s_i.back();
-        //const vector<uint8_t>& allowed_moves = ((seq_size>1) && (last_move==s_i[seq_size-2])) ? MOVES_DOUB[last_move] : MOVES[last_move] ;
-        const vector<uint8_t>& allowed_moves = (seq_size>1) ? MOVES_LOOKUP[s_i[seq_size-2]][last_move] : MOVES[last_move];
-        for (auto &i: allowed_moves) {
-            CompactSequence s_ii(s_i);
-            s_ii.push_back(i);
-            Q.push(s_ii);
-        }
+        if (seq_size<max_depth) {
+            auto last_move = s_i.back();
+            //const vector<uint8_t>& allowed_moves = ((seq_size>1) && (last_move==s_i[seq_size-2])) ? MOVES_DOUB[last_move] : MOVES[last_move] ;
+            //const vector<uint8_t>& allowed_moves = (seq_size>1) ? MOVES_LOOKUP[s_i[seq_size-2]][last_move] : MOVES[last_move];
+            const vector<uint8_t>& allowed_moves = MOVES_LOOKUP[s_i[seq_size-2]][last_move];
+            for (auto &i: allowed_moves) {
+                CompactSequence s_ii(s_i);
+                s_ii.push_back(i);
+                Q.push(s_ii);
+            }
+        }   
         k++;
 
     }
@@ -1274,6 +1278,7 @@ int main (int argc, char* argv[]) {
     bool use_hash = false;          // Optional
     int n_moves = -1;               // REQUIRED, optional if shuffle seq provided
     std::string shuffle_seq_raw;    // Optional
+    uint8_t max_depth = 20;         // Gods Number
 
     for (int i = 1; i < argc; ++i) {
         std::string arg = argv[i];
@@ -1319,7 +1324,30 @@ int main (int argc, char* argv[]) {
                 std::cerr << "Missing value for --shuffle\n";
                 return 1;
             }
-        }
+        } else if (arg == "--max_depth") {
+            if (i + 1 < argc) {
+                std::string val = argv[++i];
+                try {
+                    int value = stoi(val);
+                    if (value < 0 || value > 255) {
+                        std::cerr << "Value out of range for uint8_t\n";
+                        return 1;
+                    }
+                    max_depth = static_cast<uint8_t>(value);
+                    } catch (const std::invalid_argument&) {
+                    std::cerr << "Invalid value for --n_moves: not a number\n";
+                    return 1;
+                    } catch (const std::out_of_range&) {
+                        std::cerr << "Value for --n_moves is out of range\n";
+                        return 1;
+                    }
+                    
+                }
+            else {
+                std::cerr << "Missing value for --max_depth\n";
+                return 1;
+            }
+            } 
         else {
             std::cerr << "Unknown argument: " << arg << "\n";
             return 1;
@@ -1367,7 +1395,7 @@ int main (int argc, char* argv[]) {
     printf("Solver Status:");
 
     //apply solver
-    vector<uint8_t> final_seq = (solver_type=='E') ? SOLVE_E(cube,use_hash) : SOLVE_M(cube,use_hash);
+    vector<uint8_t> final_seq = (solver_type=='E') ? SOLVE_E(cube,use_hash,max_depth) : SOLVE_M(cube,use_hash);
 
     //print final seq
     printf("\n");
