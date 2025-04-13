@@ -11,6 +11,7 @@
 #include <cstdlib>
 #include <sstream>
 #include <stdexcept>
+#include <cstring> //added for cims compatibility
 
 
 using namespace std;
