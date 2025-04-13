@@ -946,7 +946,8 @@ vector<uint8_t> SOLVE_E(vector<uint8_t>& c,bool use_hash,uint8_t max_depth) { //
             for (auto &i: allowed_moves) {
                 CompactSequence s_ii(s_i);
                 s_ii.push_back(i);
-                Q.push(s_ii);
+                //Q.push(s_ii);
+                Q.push(std::move(s_ii));
             }
         }   
         k++;
@@ -1065,7 +1066,8 @@ vector<uint8_t> SOLVE_E(vector<uint8_t>& c,bool use_hash,uint8_t max_depth) { //
             for (auto &i: allowed_moves) {
                 CompactSequence s_ii(s_i);
                 s_ii.push_back(i);
-                Q.push(s_ii);
+                //Q.push(s_ii);
+                Q.push(std::move(s_ii));
             }
         }   
         k++;
