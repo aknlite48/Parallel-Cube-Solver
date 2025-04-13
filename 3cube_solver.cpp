@@ -1380,7 +1380,7 @@ int main (int argc, char* argv[]) {
     int move_count = std::count(shuffle_seq_raw.begin(), shuffle_seq_raw.end(), ' ') + 1;
     std::cout << std::left << std::setw(25) << "    Number of moves:"   << move_count << "\n";
     std::cout << std::left << std::setw(25) << "    Shuffle sequence:"  << shuffle_seq_raw << "\n";
-    
+    std::cout << std::left << std::setw(25) << "    Max depth:"  << (int)max_depth << "\n";
     std::cout << "--------------------------------------------\n";
 
     //initial cube state
