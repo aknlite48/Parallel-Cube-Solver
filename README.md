@@ -8,6 +8,7 @@ A fast C++ implementation of a Rubik's cube solver that uses different algorithm
 - Optional hash table for improved performance
 - Random shuffle generation with specified move count
 - Custom shuffle sequence input
+- Maximum depth for search
 - Detailed solution output
 
 ## Installation
@@ -32,6 +33,7 @@ make
 | `--use_hash` | Enable hash table for improved performance | No | false |
 | `--n_moves N` | Number of random moves to shuffle the cube | Yes* | - |
 | `--shuffle MOVES` | Custom shuffle sequence (e.g., "R U R' U'") | Yes* | - |
+| `--max_depth` | Maximum depth of algorithm | No | 20 |
 
 \* Either `--n_moves` or `--shuffle` must be provided.
 
@@ -39,7 +41,7 @@ make
 
 Solve a cube shuffled with 6 random moves using the efficient solver:
 ```bash
-./cube_solver --n_moves 20
+./cube_solver --n_moves 6
 ```
 
 Solve a cube with a specific shuffle sequence:
@@ -55,7 +57,7 @@ Use the memory-optimized solver with hash table enabled:
 ## Solver Types
 
 1. **Efficient Solver ('E')** - Prioritizes finding solutions quickly, potentially using more memory.
-2. **Memory-Intensive Solver ('M')** - Uses more memory to store solution states which can speed up runtime.
+2. **Memory-Intensive Solver ('M')** - Uses more memory to store solution states which can slow down runtime.
 
 ## Move Notation
 
@@ -85,6 +87,7 @@ The solver will display the configuration and then output the solution:
     Use hash:            false
     Number of moves:     20
     Shuffle sequence:    R U R' U' F
+    Max depth:           20
 --------------------------------------------
 
 Current depth: 5 Nodes searched: 149716 Nodes remaining: 1497161 
@@ -99,6 +102,7 @@ Performance may vary based on:
 - Solver type selected
 - Whether hash table is enabled
 - Complexity of the shuffle (number of moves)
+- Max depth
 
 ## Contributing
 
