@@ -863,6 +863,192 @@ vector<uint8_t> SOLVE_E(CubeState& c_orig,bool use_hash,uint8_t max_depth) { //c
 }
 
 
+std::vector<uint8_t> SOLVE_B(const CubeState& startState) {
+    // Define goal state (solved cube)
+    CubeState goalState;
+    
+    // Maps to store the parent state and the move that led to each state
+    std::unordered_map<CubeState, std::pair<CubeState, uint8_t>> forwardParents;
+    std::unordered_map<CubeState, std::pair<CubeState, uint8_t>> backwardParents;
+    
+    // Queues for BFS
+    std::queue<CubeState> forwardQueue;
+    std::queue<CubeState> backwardQueue;
+    
+    // Start points
+    forwardQueue.push(startState);
+    forwardParents[startState] = {startState, 255}; // Special value to indicate start state
+    
+    backwardQueue.push(goalState);
+    backwardParents[goalState] = {goalState, 255}; // Special value to indicate goal state
+    
+    // All possible moves
+    const uint8_t allMoves[] = {u, ui, d, di, r, ri, l, li, f, fi, b, bi};
+    const int numMoves = sizeof(allMoves) / sizeof(allMoves[0]);
+    
+    // Get the opposite move
+    auto getOppositeMove = [](uint8_t move) -> uint8_t {
+        static const uint8_t opposites[] = {
+            ui, u,    // u, ui
+            di, d,    // d, di
+            ri, r,    // r, ri
+            li, l,    // l, li
+            fi, f,    // f, fi
+            bi, b     // b, bi
+        };
+        if (move < 12) {
+            return opposites[move];
+        }
+        return 255; // Invalid
+    };
+    
+    // Function to reconstruct the path from start to meeting point
+    auto reconstructForwardPath = [&](const CubeState& state) -> std::vector<uint8_t> {
+        std::vector<uint8_t> path;
+        CubeState current = state;
+        
+        while (true) {
+            const auto& parent = forwardParents[current];
+            if (parent.second == 255) { // Reached start state
+                break;
+            }
+            path.push_back(parent.second);
+            current = parent.first;
+        }
+        
+        // Reverse to get the correct order (start to meeting point)
+        std::reverse(path.begin(), path.end());
+        return path;
+    };
+    
+    // Function to reconstruct the path from goal to meeting point
+    auto reconstructBackwardPath = [&](const CubeState& state) -> std::vector<uint8_t> {
+        std::vector<uint8_t> path;
+        CubeState current = state;
+        
+        while (true) {
+            const auto& parent = backwardParents[current];
+            if (parent.second == 255) { // Reached goal state
+                break;
+            }
+            // For backward path, we need the opposite move to go from meeting to goal
+            path.push_back(getOppositeMove(parent.second));
+            current = parent.first;
+        }
+        
+        return path; // Already in correct order (meeting point to goal)
+    };
+    
+    // Maximum search depth
+    const int MAX_DEPTH = 20;
+    int forwardDepth = 0;
+    int backwardDepth = 0;
+    
+    // Meeting point state
+    CubeState meetingPoint;
+    bool solutionFound = false;
+    
+    // Main bidirectional search loop
+    while (!forwardQueue.empty() && !backwardQueue.empty() && 
+           forwardDepth <= MAX_DEPTH && backwardDepth <= MAX_DEPTH) {
+        
+        // Decide which frontier to expand (smaller one for efficiency)
+        bool expandForward = (forwardQueue.size() <= backwardQueue.size());
+        
+        if (expandForward) {
+            // Expand one level of the forward search
+            int levelSize = forwardQueue.size();
+            forwardDepth++;
+            
+            for (int i = 0; i < levelSize; i++) {
+                CubeState current = forwardQueue.front();
+                forwardQueue.pop();
+                
+                // Try each possible move
+                for (int m = 0; m < numMoves; m++) {
+                    uint8_t moveType = allMoves[m];
+                    
+                    // Apply move to get next state
+                    CubeState next = current;
+                    MOVE_CUBE(next, moveType);
+                    
+                    // If this state has not been seen in forward search
+                    if (forwardParents.find(next) == forwardParents.end()) {
+                        // Record parent and move
+                        forwardParents[next] = {current, moveType};
+                        forwardQueue.push(next);
+                        
+                        // Check if this state has been seen in backward search
+                        if (backwardParents.find(next) != backwardParents.end()) {
+                            // We've found a meeting point!
+                            meetingPoint = next;
+                            solutionFound = true;
+                            break;
+                        }
+                    }
+                }
+                
+                if (solutionFound) break;
+            }
+        } else {
+            // Expand one level of the backward search
+            int levelSize = backwardQueue.size();
+            backwardDepth++;
+            
+            for (int i = 0; i < levelSize; i++) {
+                CubeState current = backwardQueue.front();
+                backwardQueue.pop();
+                
+                // Try each possible move
+                for (int m = 0; m < numMoves; m++) {
+                    uint8_t moveType = allMoves[m];
+                    
+                    // Apply move to get next state
+                    CubeState next = current;
+                    MOVE_CUBE(next, moveType);
+                    
+                    // If this state has not been seen in backward search
+                    if (backwardParents.find(next) == backwardParents.end()) {
+                        // Record parent and move
+                        backwardParents[next] = {current, moveType};
+                        backwardQueue.push(next);
+                        
+                        // Check if this state has been seen in forward search
+                        if (forwardParents.find(next) != forwardParents.end()) {
+                            // We've found a meeting point!
+                            meetingPoint = next;
+                            solutionFound = true;
+                            break;
+                        }
+                    }
+                }
+                
+                if (solutionFound) break;
+            }
+        }
+        
+        if (solutionFound) break;
+    }
+    
+    // If solution is found, reconstruct the complete path
+    if (solutionFound) {
+        // Get path from start to meeting point
+        std::vector<uint8_t> forwardPath = reconstructForwardPath(meetingPoint);
+        
+        // Get path from meeting point to goal
+        std::vector<uint8_t> backwardPath = reconstructBackwardPath(meetingPoint);
+        
+        // Combine paths
+        std::vector<uint8_t> completePath = forwardPath;
+        completePath.insert(completePath.end(), backwardPath.begin(), backwardPath.end());
+        
+        return completePath;
+    }
+    
+    // No solution found
+    return std::vector<uint8_t>();
+}
+
 std::vector<uint8_t> PARSE_SEQ(const std::string& input) {
     std::vector<uint8_t> move_indices;
     std::istringstream iss(input);
@@ -910,10 +1096,10 @@ int main (int argc, char* argv[]) {
         if (arg == "--solver") {
             if (i + 1 < argc) {
                 std::string val = argv[++i];
-                if (val == "M" || val == "E") {
+                if (val == "B" || val == "E") {
                     solver_type = val[0];
                 } else {
-                    std::cerr << "Invalid solver type: " << val << ". Use 'M' or 'E'.\n";
+                    std::cerr << "Invalid solver type: " << val << ". Use 'B' or 'E'.\n";
                     return 1;
                 }
             } else {
@@ -1022,9 +1208,10 @@ int main (int argc, char* argv[]) {
     printf("Solver Status:");
 
     //apply solver
-    //vector<uint8_t> final_seq = (solver_type=='E') ? SOLVE_E(cube,use_hash,max_depth) : SOLVE_M(cube,use_hash);
+    vector<uint8_t> final_seq = (solver_type=='E') ? SOLVE_E(cube,use_hash,max_depth) : SOLVE_B(cube);
 
-    vector<uint8_t> final_seq = SOLVE_E(cube,use_hash,max_depth);
+    //vector<uint8_t> final_seq = SOLVE_E(cube,use_hash,max_depth);
+    //vector<uint8_t> final_seq = solveCubeBidirectional(cube);
 
     //print final seq
     printf("\n");
