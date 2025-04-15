@@ -915,7 +915,7 @@ vector<uint8_t> SOLVE_B(const CubeState& c_orig, int max_depth = 20) {
     
     // Main search loop
     while (!forward_queue.empty() && !backward_queue.empty() && !solution_found.load()) {
-        #pragma omp parallel sections num_threads(12)
+        #pragma omp parallel sections num_threads(2)
         {
             // ========== Forward Search ==========
             #pragma omp section
