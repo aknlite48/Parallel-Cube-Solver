@@ -14,7 +14,8 @@
 #include <cstring> //added for cims compatibility
 #include <cstdint>
 #include <array>
-
+#include <omp.h>
+#include <atomic>
 
 using namespace std;
 
