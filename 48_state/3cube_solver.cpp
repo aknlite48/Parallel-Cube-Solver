@@ -1221,7 +1221,11 @@ int main (int argc, char* argv[]) {
 
     //move cube from shuffle move list
     CompactSequence initial_seq_compact(initial_seq);
-    MOVE_CUBE_SEQUENCE(cube,initial_seq_compact);
+    //MOVE_CUBE_SEQUENCE(cube,initial_seq_compact);
+
+    for (auto m: initial_seq) {
+        MOVE_CUBE(cube,m);
+    }
 
     printf("\n \n");
     printf("Solver Status:");
