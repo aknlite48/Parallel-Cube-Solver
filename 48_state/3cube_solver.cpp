@@ -863,265 +863,203 @@ vector<uint8_t> SOLVE_E(CubeState& c_orig,bool use_hash,uint8_t max_depth) { //c
 }
 
 
-// Bidirectional BFS implementation with inline progress tracking
-std::vector<uint8_t> SOLVE_B(const CubeState& startState,const int& MAX_DEPTH) {
-    // Define goal state (solved cube)
-    CubeState goalState;
+vector<uint8_t> SOLVE_B(const CubeState& c_orig, int max_depth = 20) {
+    vector<uint8_t> sol;
+    CubeState solved;
     
-    std::cout << "Starting bidirectional search..." << std::endl;
-    std::cout << "Forward: scrambled cube -> solved cube | Backward: solved cube -> scrambled cube" << std::endl;
-    std::cout << "--------------------------------------------------------------------------------" << std::endl;
-    
-    // Column headers for progress tracking
-    std::cout << std::left 
-              << std::setw(8) << "Depth" 
-              << std::setw(22) << "Forward (States/Queue)" 
-              << std::setw(22) << "Backward (States/Queue)" 
-              << "Total States" << std::endl;
-    
-    std::cout << "--------------------------------------------------------------------------------" << std::endl;
-    
-    // Maps to store the parent state and the move that led to each state
-    std::unordered_map<CubeState, std::pair<CubeState, uint8_t>> forwardParents;
-    std::unordered_map<CubeState, std::pair<CubeState, uint8_t>> backwardParents;
-    
-    // Queues for BFS
-    std::queue<CubeState> forwardQueue;
-    std::queue<CubeState> backwardQueue;
-    
-    // Start points
-    forwardQueue.push(startState);
-    forwardParents[startState] = {startState, 255}; // Special value to indicate start state
-    
-    backwardQueue.push(goalState);
-    backwardParents[goalState] = {goalState, 255}; // Special value to indicate goal state
-    
-    // All possible moves
-    const uint8_t allMoves[] = {u, ui, d, di, r, ri, l, li, f, fi, b, bi};
-    const int numMoves = sizeof(allMoves) / sizeof(allMoves[0]);
-    
-    // Map move codes to strings for display
-    const char* moveNames[] = {"U", "U'", "D", "D'", "R", "R'", "L", "L'", "F", "F'", "B", "B'"};
-    
-    // Get the opposite move
-    auto getOppositeMove = [](uint8_t move) -> uint8_t {
-        static const uint8_t opposites[] = {
-            ui, u,    // u, ui
-            di, d,    // d, di
-            ri, r,    // r, ri
-            li, l,    // l, li
-            fi, f,    // f, fi
-            bi, b     // b, bi
-        };
-        if (move < 12) {
-            return opposites[move];
-        }
-        return 255; // Invalid
-    };
-    
-    // Function to reconstruct the path from start to meeting point
-    auto reconstructForwardPath = [&](const CubeState& state) -> std::vector<uint8_t> {
-        std::vector<uint8_t> path;
-        CubeState current = state;
-        
-        while (true) {
-            const auto& parent = forwardParents[current];
-            if (parent.second == 255) { // Reached start state
-                break;
-            }
-            path.push_back(parent.second);
-            current = parent.first;
-        }
-        
-        // Reverse to get the correct order (start to meeting point)
-        std::reverse(path.begin(), path.end());
-        return path;
-    };
-    
-    // Function to reconstruct the path from goal to meeting point
-    auto reconstructBackwardPath = [&](const CubeState& state) -> std::vector<uint8_t> {
-        std::vector<uint8_t> path;
-        CubeState current = state;
-        
-        while (true) {
-            const auto& parent = backwardParents[current];
-            if (parent.second == 255) { // Reached goal state
-                break;
-            }
-            // For backward path, we need the opposite move to go from meeting to goal
-            path.push_back(getOppositeMove(parent.second));
-            current = parent.first;
-        }
-        
-        return path; // Already in correct order (meeting point to goal)
-    };
-    
-    // Maximum search depth and progress tracking
-    //const int MAX_DEPTH = 20;
-    int forwardDepth = 0;
-    int backwardDepth = 0;
-    
-    // Keep count of total states explored
-    int forwardStatesExplored = 1; // Start with 1 for initial state
-    int backwardStatesExplored = 1; // Start with 1 for initial state
-    
-    // Print initial state
-    std::cout << std::left 
-              << std::setw(8) << "0" 
-              << std::setw(22) << "1/1" 
-              << std::setw(22) << "1/1" 
-              << "2" << std::endl;
-    
-    // Meeting point state
-    CubeState meetingPoint;
-    bool solutionFound = false;
-    
-    // Main bidirectional search loop
-    while (!forwardQueue.empty() && !backwardQueue.empty() && 
-           forwardDepth <= MAX_DEPTH && backwardDepth <= MAX_DEPTH) {
-        
-        // Decide which frontier to expand (smaller one for efficiency)
-        bool expandForward = (forwardQueue.size() <= backwardQueue.size());
-        
-        if (expandForward) {
-            // Expand one level of the forward search
-            int levelSize = forwardQueue.size();
-            forwardDepth++;
-            int newStatesAtThisLevel = 0;
-            
-            for (int i = 0; i < levelSize; i++) {
-                CubeState current = forwardQueue.front();
-                forwardQueue.pop();
-                
-                // Try each possible move
-                for (int m = 0; m < numMoves; m++) {
-                    uint8_t moveType = allMoves[m];
-                    
-                    // Apply move to get next state
-                    CubeState next = current;
-                    MOVE_CUBE(next, moveType);
-                    
-                    // If this state has not been seen in forward search
-                    if (forwardParents.find(next) == forwardParents.end()) {
-                        // Record parent and move
-                        forwardParents[next] = {current, moveType};
-                        forwardQueue.push(next);
-                        forwardStatesExplored++;
-                        newStatesAtThisLevel++;
-                        
-                        // Check if this state has been seen in backward search
-                        if (backwardParents.find(next) != backwardParents.end()) {
-                            // We've found a meeting point!
-                            meetingPoint = next;
-                            solutionFound = true;
-                            break;
-                        }
-                    }
-                }
-                
-                if (solutionFound) break;
-            }
-            
-            // Print progress (forward search just expanded)
-            std::cout << std::left 
-                      << std::setw(8) << forwardDepth 
-                      << std::setw(22) << (std::to_string(forwardStatesExplored) + "/" + std::to_string(forwardQueue.size()))
-                      << std::setw(22) << (std::to_string(backwardStatesExplored) + "/" + std::to_string(backwardQueue.size()))
-                      << (forwardStatesExplored + backwardStatesExplored) << std::endl;
-            
-        } else {
-            // Expand one level of the backward search
-            int levelSize = backwardQueue.size();
-            backwardDepth++;
-            int newStatesAtThisLevel = 0;
-            
-            for (int i = 0; i < levelSize; i++) {
-                CubeState current = backwardQueue.front();
-                backwardQueue.pop();
-                
-                // Try each possible move
-                for (int m = 0; m < numMoves; m++) {
-                    uint8_t moveType = allMoves[m];
-                    
-                    // Apply move to get next state
-                    CubeState next = current;
-                    MOVE_CUBE(next, moveType);
-                    
-                    // If this state has not been seen in backward search
-                    if (backwardParents.find(next) == backwardParents.end()) {
-                        // Record parent and move
-                        backwardParents[next] = {current, moveType};
-                        backwardQueue.push(next);
-                        backwardStatesExplored++;
-                        newStatesAtThisLevel++;
-                        
-                        // Check if this state has been seen in forward search
-                        if (forwardParents.find(next) != forwardParents.end()) {
-                            // We've found a meeting point!
-                            meetingPoint = next;
-                            solutionFound = true;
-                            break;
-                        }
-                    }
-                }
-                
-                if (solutionFound) break;
-            }
-            
-            // Print progress (backward search just expanded)
-            std::cout << std::left 
-                      << std::setw(8) << backwardDepth 
-                      << std::setw(22) << (std::to_string(forwardStatesExplored) + "/" + std::to_string(forwardQueue.size()))
-                      << std::setw(22) << (std::to_string(backwardStatesExplored) + "/" + std::to_string(backwardQueue.size()))
-                      << (forwardStatesExplored + backwardStatesExplored) << std::endl;
-        }
-        
-        if (solutionFound) break;
+    // Check if already solved
+    if (c_orig == solved) {
+        cout << "Already solved" << endl;
+        return sol;
     }
     
-    // If solution is found, reconstruct the complete path
-    if (solutionFound) {
-        // Get path from start to meeting point
-        std::vector<uint8_t> forwardPath = reconstructForwardPath(meetingPoint);
-        
-        // Get path from meeting point to goal
-        std::vector<uint8_t> backwardPath = reconstructBackwardPath(meetingPoint);
-        
-        // Print solution found message
-        std::cout << "--------------------------------------------------------------------------------" << std::endl;
-        std::cout << "Solution found! Meeting point at depths: Forward=" << forwardDepth 
-                  << ", Backward=" << backwardDepth << std::endl;
-        
-        // Print the path details
-        std::cout << "Forward path (" << forwardPath.size() << " moves): ";
-        for (uint8_t move : forwardPath) {
-            std::cout << moveNames[move] << " ";
+    // Store visited states from forward search
+    // Map from cube state to the move sequence that reaches it
+    unordered_map<CubeState, CompactSequence> forward_visited;
+    
+    // Store visited states from backward search
+    // Map from cube state to the move sequence that reaches it
+    unordered_map<CubeState, CompactSequence> backward_visited;
+    
+    // Queue for forward search (from initial state)
+    queue<pair<CubeState, CompactSequence>> forward_queue;
+    
+    // Queue for backward search (from solved state)
+    queue<pair<CubeState, CompactSequence>> backward_queue;
+    
+    // Inverse move mapping - for the backward search
+    // This maps each move to its inverse move
+    unordered_map<uint8_t, uint8_t> inverse_move = {
+        {AV_MOVE::u, AV_MOVE::ui}, {AV_MOVE::ui, AV_MOVE::u},
+        {AV_MOVE::d, AV_MOVE::di}, {AV_MOVE::di, AV_MOVE::d},
+        {AV_MOVE::r, AV_MOVE::ri}, {AV_MOVE::ri, AV_MOVE::r},
+        {AV_MOVE::l, AV_MOVE::li}, {AV_MOVE::li, AV_MOVE::l},
+        {AV_MOVE::f, AV_MOVE::fi}, {AV_MOVE::fi, AV_MOVE::f},
+        {AV_MOVE::b, AV_MOVE::bi}, {AV_MOVE::bi, AV_MOVE::b}
+    };
+    
+    // Initialize forward search with initial state
+    forward_queue.push({c_orig, CompactSequence()});
+    forward_visited[c_orig] = CompactSequence();
+    
+    // Initialize backward search with solved state
+    backward_queue.push({solved, CompactSequence()});
+    backward_visited[solved] = CompactSequence();
+    
+    int nodes_searched = 0;
+    bool solution_found = false;
+    CompactSequence forward_path, backward_path;
+    
+    // Main search loop
+    while (!forward_queue.empty() && !backward_queue.empty() && !solution_found) {
+        // Expand forward search by one level
+        int forward_level_size = forward_queue.size();
+        for (int i = 0; i < forward_level_size && !solution_found; i++) {
+            auto [current_state, move_sequence] = forward_queue.front();
+            forward_queue.pop();
+            
+            uint8_t seq_size = move_sequence.size();
+            
+            // Check depth limit
+            if (seq_size >= max_depth / 2) {
+                continue;
+            }
+            
+            // Get last move(s) for pruning
+            uint8_t last_move = seq_size > 0 ? move_sequence.back() : 255;
+            uint8_t second_last_move = seq_size > 1 ? move_sequence[seq_size - 2] : 255;
+            
+            // Determine allowed moves
+            const vector<uint8_t>& allowed_moves = (seq_size > 1) ? 
+                MOVES_LOOKUP[second_last_move][last_move] : 
+                (seq_size > 0 ? MOVES[last_move] : MOVE_LIST);
+            
+            // Try each allowed move
+            for (auto move : allowed_moves) {
+                CubeState next_state = current_state;
+                MOVE_CUBE(next_state, move);
+                
+                // Skip if already visited in forward search
+                if (forward_visited.find(next_state) != forward_visited.end()) {
+                    continue;
+                }
+                
+                // Create new move sequence
+                CompactSequence next_sequence = move_sequence;
+                next_sequence.push_back(move);
+                
+                // Store in visited states
+                forward_visited[next_state] = next_sequence;
+                
+                // Check if this state has been visited in backward search
+                if (backward_visited.find(next_state) != backward_visited.end()) {
+                    // Found a meeting point - solution found!
+                    forward_path = next_sequence;
+                    backward_path = backward_visited[next_state];
+                    solution_found = true;
+                    break;
+                }
+                
+                // Add to queue for next level
+                forward_queue.push({next_state, next_sequence});
+            }
+            
+            nodes_searched++;
+            if (nodes_searched % 10000 == 0) {
+                cout << "\r" << "Nodes searched: " << nodes_searched 
+                     << " Forward queue: " << forward_queue.size() 
+                     << " Backward queue: " << backward_queue.size();
+            }
         }
-        std::cout << std::endl;
         
-        std::cout << "Backward path (" << backwardPath.size() << " moves): ";
-        for (uint8_t move : backwardPath) {
-            std::cout << moveNames[move] << " ";
+        if (solution_found) break;
+        
+        // Expand backward search by one level
+        int backward_level_size = backward_queue.size();
+        for (int i = 0; i < backward_level_size && !solution_found; i++) {
+            auto [current_state, move_sequence] = backward_queue.front();
+            backward_queue.pop();
+            
+            uint8_t seq_size = move_sequence.size();
+            
+            // Check depth limit
+            if (seq_size >= max_depth / 2) {
+                continue;
+            }
+            
+            // Get last move(s) for pruning
+            uint8_t last_move = seq_size > 0 ? move_sequence.back() : 255;
+            uint8_t second_last_move = seq_size > 1 ? move_sequence[seq_size - 2] : 255;
+            
+            // Determine allowed moves - we need inverse moves for backward search
+            const vector<uint8_t>& prune_moves = (seq_size > 1) ? 
+                MOVES_LOOKUP[second_last_move][last_move] : 
+                (seq_size > 0 ? MOVES[last_move] : MOVE_LIST);
+                
+            // We need to apply inverse moves for the backward search
+            vector<uint8_t> allowed_moves;
+            for (auto move : prune_moves) {
+                allowed_moves.push_back(inverse_move[move]);
+            }
+            
+            // Try each allowed move
+            for (auto move : allowed_moves) {
+                CubeState next_state = current_state;
+                MOVE_CUBE(next_state, move);
+                
+                // Skip if already visited in backward search
+                if (backward_visited.find(next_state) != backward_visited.end()) {
+                    continue;
+                }
+                
+                // Create new move sequence
+                CompactSequence next_sequence = move_sequence;
+                next_sequence.push_back(move);
+                
+                // Store in visited states
+                backward_visited[next_state] = next_sequence;
+                
+                // Check if this state has been visited in forward search
+                if (forward_visited.find(next_state) != forward_visited.end()) {
+                    // Found a meeting point - solution found!
+                    forward_path = forward_visited[next_state];
+                    backward_path = next_sequence;
+                    solution_found = true;
+                    break;
+                }
+                
+                // Add to queue for next level
+                backward_queue.push({next_state, next_sequence});
+            }
+            
+            nodes_searched++;
+            if (nodes_searched % 10000 == 0) {
+                cout << "\r" << "Nodes searched: " << nodes_searched 
+                     << " Forward queue: " << forward_queue.size() 
+                     << " Backward queue: " << backward_queue.size();
+            }
         }
-        std::cout << std::endl;
-        
-        // Combine paths
-        std::vector<uint8_t> completePath = forwardPath;
-        completePath.insert(completePath.end(), backwardPath.begin(), backwardPath.end());
-        
-        std::cout << "Total solution (" << completePath.size() << " moves): ";
-        for (uint8_t move : completePath) {
-            std::cout << moveNames[move] << " ";
-        }
-        std::cout << std::endl;
-        
-        return completePath;
     }
     
-    // No solution found
-    std::cout << "--------------------------------------------------------------------------------" << std::endl;
-    std::cout << "No solution found within maximum depth of " << MAX_DEPTH << std::endl;
-    return std::vector<uint8_t>();
+    if (solution_found) {
+        cout << endl << "Solution found!" << endl;
+        
+        // Construct the complete solution
+        // Forward path + Reversed backward path (need to use inverse moves)
+        sol = forward_path.toVector();
+        
+        // Add reversed backward path
+        vector<uint8_t> backward_vec = backward_path.toVector();
+        for (int i = backward_vec.size() - 1; i >= 0; i--) {
+            sol.push_back(inverse_move[backward_vec[i]]);
+        }
+        
+        cout << "Solution length: " << sol.size() << endl;
+    } else {
+        cout << endl << "No solution found within depth limit." << endl;
+    }
+    
+    return sol;
 }
 
 std::vector<uint8_t> PARSE_SEQ(const std::string& input) {
@@ -1171,10 +1109,10 @@ int main (int argc, char* argv[]) {
         if (arg == "--solver") {
             if (i + 1 < argc) {
                 std::string val = argv[++i];
-                if (val == "M" || val == "E") {
+                if (val == "B" || val == "E") {
                     solver_type = val[0];
                 } else {
-                    std::cerr << "Invalid solver type: " << val << ". Use 'M' or 'E'.\n";
+                    std::cerr << "Invalid solver type: " << val << ". Use 'B' or 'E'.\n";
                     return 1;
                 }
             } else {
