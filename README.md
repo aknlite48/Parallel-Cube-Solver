@@ -54,6 +54,11 @@ Use the memory-optimized solver with hash table enabled:
 ./cube_solver --solver M --use_hash --n_moves 7
 ```
 
+### Parallelization
+```bash
+time OMP_NUM_THREADS=8 ./3cube_solver --solver B --n_moves 12 --max_depth 12 --shuffle "R U R' U' F B L D U' L' B F"
+```
+
 ## Solver Types
 
 1. **Efficient Solver ('E')** - Prioritizes finding solutions quickly, potentially using more memory.
