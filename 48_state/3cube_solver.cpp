@@ -14,6 +14,7 @@
 #include <cstring> //added for cims compatibility
 #include <cstdint>
 #include <array>
+#include <omp.h>
 
 
 using namespace std;
@@ -913,10 +914,18 @@ vector<uint8_t> SOLVE_B(const CubeState& c_orig, int max_depth = 20) {
     // Main search loop
     while (!forward_queue.empty() && !backward_queue.empty() && !solution_found) {
         // Expand forward search by one level
-        int forward_level_size = forward_queue.size();
-        for (int i = 0; i < forward_level_size && !solution_found; i++) {
-            auto [current_state, move_sequence] = forward_queue.front();
+
+
+        vector<pair<CubeState, CompactSequence>> forward_queue_local;
+        while (!forward_queue.empty()) {
+            forward_queue_local.push_back(forward_queue.front());
             forward_queue.pop();
+        }
+        int forward_level_size = forward_queue_local.size();
+        #pragma omp parallel for schedule(dynamic)
+        for (int i = 0; i < forward_level_size ; i++) {
+            if (solution_found) continue;
+            auto [current_state, move_sequence] = forward_queue_local[i];
             
             uint8_t seq_size = move_sequence.size();
             
@@ -938,33 +947,30 @@ vector<uint8_t> SOLVE_B(const CubeState& c_orig, int max_depth = 20) {
             for (auto move : allowed_moves) {
                 CubeState next_state = current_state;
                 MOVE_CUBE(next_state, move);
-                
-                // Skip if already visited in forward search
-                if (forward_visited.find(next_state) != forward_visited.end()) {
-                    continue;
-                }
-                
-                // Create new move sequence
                 CompactSequence next_sequence = move_sequence;
                 next_sequence.push_back(move);
-                
-                // Store in visited states
-                forward_visited[next_state] = next_sequence;
-                
-                // Check if this state has been visited in backward search
-                if (backward_visited.find(next_state) != backward_visited.end()) {
-                    // Found a meeting point - solution found!
-                    forward_path = next_sequence;
-                    backward_path = backward_visited[next_state];
-                    solution_found = true;
-                    break;
+                // cout<<"hekkoi"<<endl;
+                #pragma omp critical
+                {
+                    if (forward_visited.find(next_state) == forward_visited.end()) {
+                        forward_visited[next_state] = next_sequence;
+                        forward_queue.push({next_state, next_sequence});
+
+                        if (backward_visited.find(next_state) != backward_visited.end()) {
+                            #pragma omp critical (solution_found)
+                            {
+                                solution_found = true;
+                                forward_path = next_sequence;
+                                backward_path = backward_visited[next_state];
+                            }
+                        }
+                    }
                 }
-                
-                // Add to queue for next level
-                forward_queue.push({next_state, next_sequence});
             }
             
+            #pragma omp atomic
             nodes_searched++;
+
             if (nodes_searched % 10000 == 0) {
                 cout << "\r" << "Nodes searched: " << nodes_searched 
                      << " Forward queue: " << forward_queue.size() 
@@ -975,11 +981,16 @@ vector<uint8_t> SOLVE_B(const CubeState& c_orig, int max_depth = 20) {
         if (solution_found) break;
         
         // Expand backward search by one level
-        int backward_level_size = backward_queue.size();
-        for (int i = 0; i < backward_level_size && !solution_found; i++) {
-            auto [current_state, move_sequence] = backward_queue.front();
+        vector<pair<CubeState, CompactSequence>> backward_queue_local;
+        while (!backward_queue.empty()) {
+            backward_queue_local.push_back(backward_queue.front());
             backward_queue.pop();
-            
+        }
+        int backward_level_size = backward_queue_local.size();
+        #pragma omp parallel for schedule(dynamic)
+        for (int i = 0; i < backward_level_size ; i++) {
+            if (solution_found) continue;
+            auto [current_state, move_sequence] = backward_queue_local[i];
             uint8_t seq_size = move_sequence.size();
             
             // Check depth limit
@@ -1016,22 +1027,27 @@ vector<uint8_t> SOLVE_B(const CubeState& c_orig, int max_depth = 20) {
                 CompactSequence next_sequence = move_sequence;
                 next_sequence.push_back(move);
                 
-                // Store in visited states
-                backward_visited[next_state] = next_sequence;
+                #pragma omp critical
+                {
+                     // Store in visited states
+                    backward_visited[next_state] = next_sequence;
+
+                    if (forward_visited.find(next_state) != forward_visited.end()) {
+                        // Found a meeting point - solution found!
+                        #pragma omp critical (solution_found)
+                        {
+                            forward_path = forward_visited[next_state];
+                            backward_path = next_sequence;
+                            solution_found = true;
+                        }
+                    }
+                    // Add to queue for next level
+                    backward_queue.push({next_state, next_sequence});
                 
-                // Check if this state has been visited in forward search
-                if (forward_visited.find(next_state) != forward_visited.end()) {
-                    // Found a meeting point - solution found!
-                    forward_path = forward_visited[next_state];
-                    backward_path = next_sequence;
-                    solution_found = true;
-                    break;
                 }
-                
-                // Add to queue for next level
-                backward_queue.push({next_state, next_sequence});
             }
-            
+
+            #pragma omp atomic
             nodes_searched++;
             if (nodes_searched % 10000 == 0) {
                 cout << "\r" << "Nodes searched: " << nodes_searched 
