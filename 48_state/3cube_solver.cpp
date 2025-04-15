@@ -1047,6 +1047,8 @@ vector<uint8_t> SOLVE_B(const CubeState& c_orig, int max_depth = 20) {
         // Construct the complete solution
         // Forward path + Reversed backward path (need to use inverse moves)
         sol = forward_path.toVector();
+        int forward_length = forward_path.size();
+        int backward_length = backward_path.size();
         
         // Add reversed backward path
         vector<uint8_t> backward_vec = backward_path.toVector();
@@ -1055,6 +1057,10 @@ vector<uint8_t> SOLVE_B(const CubeState& c_orig, int max_depth = 20) {
         }
         
         cout << "Solution length: " << sol.size() << endl;
+        cout << "Forward path length: " << forward_length << endl;
+        cout << "Backward path length: " << backward_length << endl;
+        cout << "Forward states explored: " << forward_visited.size() << endl;
+        cout << "Backward states explored: " << backward_visited.size() << endl;
     } else {
         cout << endl << "No solution found within depth limit." << endl;
     }
