@@ -1,0 +1,382 @@
+[gb2762@crunchy1 48_state]$ vi bashB.sh 
+[gb2762@crunchy1 48_state]$ make clean && make
+rm -f 3cube_solver
+g++ -std=c++17 -Wall -Wextra -O2 3cube_solver.cpp -o 3cube_solver
+[gb2762@crunchy1 48_state]$ ./bashB.sh 
+Running with depth=4, threads=
+Shuffle: D L' B' F
+Command: time OMP_NUM_THREADS= ./3cube_solver --solver B --n_moves 4 --max_depth 4 --shuffle "D L' B' F"
+
+ 
+       Cube Solver - Configuration
+--------------------------------------------
+    Solver type:         B
+    Use hash:            false
+    Number of moves:     4
+    Shuffle sequence:    D L' B' F
+    Max depth:           20
+--------------------------------------------
+
+ 
+Solver Status:
+Solution found!
+Solution length: 4
+Forward path length: 2
+Backward path length: 2
+Forward states explored: 127
+Backward states explored: 44
+
+Solution sequence: F' B L D'
+
+real	0m0.031s
+user	0m0.003s
+sys	0m0.005s
+----------------------------------------
+Running with depth=5, threads=
+Shuffle: D L' B' F D
+Command: time OMP_NUM_THREADS= ./3cube_solver --solver B --n_moves 5 --max_depth 5 --shuffle "D L' B' F D"
+
+ 
+       Cube Solver - Configuration
+--------------------------------------------
+    Solver type:         B
+    Use hash:            false
+    Number of moves:     5
+    Shuffle sequence:    D L' B' F D
+    Max depth:           20
+--------------------------------------------
+
+ 
+Solver Status:
+Solution found!
+Solution length: 5
+Forward path length: 3
+Backward path length: 2
+Forward states explored: 465
+Backward states explored: 121
+
+Solution sequence: D' F' B L D'
+
+real	0m0.009s
+user	0m0.002s
+sys	0m0.004s
+----------------------------------------
+Running with depth=6, threads=
+Shuffle: F' D L' B' F D
+Command: time OMP_NUM_THREADS= ./3cube_solver --solver B --n_moves 6 --max_depth 6 --shuffle "F' D L' B' F D"
+
+ 
+       Cube Solver - Configuration
+--------------------------------------------
+    Solver type:         B
+    Use hash:            false
+    Number of moves:     6
+    Shuffle sequence:    F' D L' B' F D
+    Max depth:           20
+--------------------------------------------
+
+ 
+Solver Status:
+Solution found!
+Solution length: 6
+Forward path length: 3
+Backward path length: 3
+Forward states explored: 1195
+Backward states explored: 792
+
+Solution sequence: D' F' B L D' F
+
+real	0m0.033s
+user	0m0.006s
+sys	0m0.002s
+----------------------------------------
+Running with depth=7, threads=
+Shuffle: R' F' D L' B' F D
+Command: time OMP_NUM_THREADS= ./3cube_solver --solver B --n_moves 7 --max_depth 7 --shuffle "R' F' D L' B' F D"
+
+ 
+       Cube Solver - Configuration
+--------------------------------------------
+    Solver type:         B
+    Use hash:            false
+    Number of moves:     7
+    Shuffle sequence:    R' F' D L' B' F D
+    Max depth:           20
+--------------------------------------------
+
+ 
+Solver Status:
+Solution found!
+Solution length: 7
+Forward path length: 4
+Backward path length: 3
+Forward states explored: 4362
+Backward states explored: 1081
+
+Solution sequence: D' F' B L D' F R
+
+real	0m0.038s
+user	0m0.008s
+sys	0m0.004s
+----------------------------------------
+Running with depth=8, threads=
+Shuffle: R' F' D L' B' F D U'
+Command: time OMP_NUM_THREADS= ./3cube_solver --solver B --n_moves 8 --max_depth 8 --shuffle "R' F' D L' B' F D U'"
+
+ 
+       Cube Solver - Configuration
+--------------------------------------------
+    Solver type:         B
+    Use hash:            false
+    Number of moves:     8
+    Shuffle sequence:    R' F' D L' B' F D U'
+    Max depth:           20
+--------------------------------------------
+
+ 
+Solver Status:
+Solution found!
+Solution length: 8
+Forward path length: 4
+Backward path length: 4
+Forward states explored: 11206
+Backward states explored: 4424
+
+Solution sequence: U D' F' B L D' F R
+
+real	0m0.053s
+user	0m0.020s
+sys	0m0.006s
+----------------------------------------
+Running with depth=9, threads=
+Shuffle: U R' F' D L' B' F D U'
+Command: time OMP_NUM_THREADS= ./3cube_solver --solver B --n_moves 9 --max_depth 9 --shuffle "U R' F' D L' B' F D U'"
+
+ 
+       Cube Solver - Configuration
+--------------------------------------------
+    Solver type:         B
+    Use hash:            false
+    Number of moves:     9
+    Shuffle sequence:    U R' F' D L' B' F D U'
+    Max depth:           20
+--------------------------------------------
+
+ 
+Solver Status:
+Solution found!
+Solution length: 9
+Forward path length: 5
+Backward path length: 4
+Forward states explored: 13408
+Backward states explored: 9625
+
+Solution sequence: U D' F' B L D' F R U'
+
+real	0m0.045s
+user	0m0.029s
+sys	0m0.008s
+----------------------------------------
+Running with depth=10, threads=
+Shuffle: R U R' F' D L' B' F D U'
+Command: time OMP_NUM_THREADS= ./3cube_solver --solver B --n_moves 10 --max_depth 10 --shuffle "R U R' F' D L' B' F D U'"
+
+ 
+       Cube Solver - Configuration
+--------------------------------------------
+    Solver type:         B
+    Use hash:            false
+    Number of moves:     10
+    Shuffle sequence:    R U R' F' D L' B' F D U'
+    Max depth:           20
+--------------------------------------------
+
+ 
+Nodes searched: 10000 Forward queue: 74690 Backward queue: 8544
+Solution found!
+Solution length: 10
+Forward path length: 5
+Backward path length: 5
+Forward states explored: 105046
+Backward states explored: 42929
+
+Solution sequence: U D' F' B L D' F R U' R'
+
+real	0m0.361s
+user	0m0.241s
+sys	0m0.053s
+----------------------------------------
+Running with depth=11, threads=
+Shuffle: R U R' U' F' D L' B' F D U'
+Command: time OMP_NUM_THREADS= ./3cube_solver --solver B --n_moves 11 --max_depth 11 --shuffle "R U R' U' F' D L' B' F D U'"
+
+ 
+       Cube Solver - Configuration
+--------------------------------------------
+    Solver type:         B
+    Use hash:            false
+    Number of moves:     11
+    Shuffle sequence:    R U R' U' F' D L' B' F D U'
+    Max depth:           20
+--------------------------------------------
+
+ 
+Nodes searched: 20000 Forward queue: 93840 Backward queue: 69469
+Solution found!
+Solution length: 11
+Forward path length: 6
+Backward path length: 5
+Forward states explored: 125683
+Backward states explored: 85657
+
+Solution sequence: U D' F' B L D' F U R U' R'
+
+real	0m0.442s
+user	0m0.340s
+sys	0m0.036s
+----------------------------------------
+Running with depth=12, threads=
+Shuffle: R U R' U' F B L D U' L' B F
+Command: time OMP_NUM_THREADS= ./3cube_solver --solver B --n_moves 12 --max_depth 12 --shuffle "R U R' U' F B L D U' L' B F"
+
+ 
+       Cube Solver - Configuration
+--------------------------------------------
+    Solver type:         B
+    Use hash:            false
+    Number of moves:     12
+    Shuffle sequence:    R U R' U' F B L D U' L' B F
+    Max depth:           20
+--------------------------------------------
+
+ 
+Nodes searched: 140000 Forward queue: 878880 Backward queue: 276041
+Solution found!
+Solution length: 12
+Forward path length: 6
+Backward path length: 6
+Forward states explored: 983926
+Backward states explored: 381502
+
+Solution sequence: F' B' L U D' L' B' F' U R U' R'
+
+real	0m2.882s
+user	0m2.523s
+sys	0m0.280s
+----------------------------------------
+Running with depth=13, threads=
+Shuffle: R U R' U' F B L D U' L' B F R
+Command: time OMP_NUM_THREADS= ./3cube_solver --solver B --n_moves 13 --max_depth 13 --shuffle "R U R' U' F B L D U' L' B F R"
+
+ 
+       Cube Solver - Configuration
+--------------------------------------------
+    Solver type:         B
+    Use hash:            false
+    Number of moves:     13
+    Shuffle sequence:    R U R' U' F B L D U' L' B F R
+    Max depth:           20
+--------------------------------------------
+
+ 
+Nodes searched: 630000 Forward queue: 4551430 Backward queue: 676104
+Solution found!
+Solution length: 13
+Forward path length: 7
+Backward path length: 6
+Forward states explored: 5104554
+Backward states explored: 761761
+
+Solution sequence: R' F' B' L U D' L' B' F' U R U' R'
+
+real	0m11.449s
+user	0m10.413s
+sys	0m1.018s
+----------------------------------------
+Running with depth=14, threads=
+Shuffle: R U R' U' F B L D U' L' B F R U
+Command: time OMP_NUM_THREADS= ./3cube_solver --solver B --n_moves 14 --max_depth 14 --shuffle "R U R' U' F B L D U' L' B F R U"
+
+ 
+       Cube Solver - Configuration
+--------------------------------------------
+    Solver type:         B
+    Use hash:            false
+    Number of moves:     14
+    Shuffle sequence:    R U R' U' F B L D U' L' B F R U
+    Max depth:           20
+--------------------------------------------
+
+ 
+Nodes searched: 1360000 Forward queue: 8221632 Backward queue: 2966891
+Solution found!
+Solution length: 14
+Forward path length: 7
+Backward path length: 7
+Forward states explored: 9205558
+Backward states explored: 3391229
+
+Solution sequence: U' R' F' B' L U D' L' B' F' U R U' R'
+
+real	0m28.857s
+user	0m24.719s
+sys	0m3.675s
+----------------------------------------
+Running with depth=15, threads=
+Shuffle: R U R' U' F B L D U' L' B F R U D
+Command: time OMP_NUM_THREADS= ./3cube_solver --solver B --n_moves 15 --max_depth 15 --shuffle "R U R' U' F B L D U' L' B F R U D"
+
+ 
+       Cube Solver - Configuration
+--------------------------------------------
+    Solver type:         B
+    Use hash:            false
+    Number of moves:     15
+    Shuffle sequence:    R U R' U' F B L D U' L' B F R U D
+    Max depth:           20
+--------------------------------------------
+
+ 
+Nodes searched: 2620000 Forward queue: 15525509 Backward queue: 6004608
+Solution found!
+Solution length: 15
+Forward path length: 8
+Backward path length: 7
+Forward states explored: 17427380
+Backward states explored: 6766369
+
+Solution sequence: U' D' R' F' B' L U D' L' B' F' U R U' R'
+
+real	0m52.993s
+user	0m47.761s
+sys	0m4.661s
+----------------------------------------
+Running with depth=16, threads=
+Shuffle: R U R' U' F B L D U' L' B F R U D F
+Command: time OMP_NUM_THREADS= ./3cube_solver --solver B --n_moves 16 --max_depth 16 --shuffle "R U R' U' F B L D U' L' B F R U D F"
+
+ 
+       Cube Solver - Configuration
+--------------------------------------------
+    Solver type:         B
+    Use hash:            false
+    Number of moves:     16
+    Shuffle sequence:    R U R' U' F B L D U' L' B F R U D F
+    Max depth:           20
+--------------------------------------------
+
+ 
+Nodes searched: 12590000 Forward queue: 76843595 Backward queue: 26668610
+Solution found!
+Solution length: 16
+Forward path length: 8
+Backward path length: 8
+Forward states explored: 86049153
+Backward states explored: 30113327
+
+Solution sequence: F' U' D' R' F' B' L D' U L' B' F' U R U' R'
+
+real	4m39.044s
+user	4m5.777s
+sys	0m24.706s
+----------------------------------------

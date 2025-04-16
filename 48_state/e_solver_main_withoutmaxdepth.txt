@@ -1,0 +1,124 @@
+[gb2762@crunchy1 48_state]$ make clean && make
+rm -f 3cube_solver
+g++ -std=c++17 -Wall -Wextra -O2 3cube_solver.cpp -o 3cube_solver
+[gb2762@crunchy1 48_state]$ ./bash.sh 
+Running with depth=4, threads=
+Shuffle: D L' B' F
+Command: time  ./3cube_solver --solver E --shuffle "D L' B' F"
+
+ 
+       Cube Solver - Configuration
+--------------------------------------------
+    Solver type:         E
+    Use hash:            false
+    Number of moves:     4
+    Shuffle sequence:    D L' B' F
+    Max depth:           20
+--------------------------------------------
+
+ 
+Current depth: 4 Nodes searched: 10000 Nodes remaining: 97582 
+Solution found
+
+Solution sequence: F' B L D'
+
+real	0m0.067s
+user	0m0.013s
+sys	0m0.009s
+----------------------------------------
+Running with depth=5, threads=
+Shuffle: D L' B' F D
+Command: time  ./3cube_solver --solver E --shuffle "D L' B' F D"
+
+ 
+       Cube Solver - Configuration
+--------------------------------------------
+    Solver type:         E
+    Use hash:            false
+    Number of moves:     5
+    Shuffle sequence:    D L' B' F D
+    Max depth:           20
+--------------------------------------------
+
+ 
+Current depth: 5 Nodes searched: 80000 Nodes remaining: 779697 
+Solution found
+
+Solution sequence: D' F' B L D'
+
+real	0m0.111s
+user	0m0.039s
+sys	0m0.030s
+----------------------------------------
+Running with depth=6, threads=
+Shuffle: F' D L' B' F D
+Command: time  ./3cube_solver --solver E --shuffle "F' D L' B' F D"
+
+ 
+       Cube Solver - Configuration
+--------------------------------------------
+    Solver type:         E
+    Use hash:            false
+    Number of moves:     6
+    Shuffle sequence:    F' D L' B' F D
+    Max depth:           20
+--------------------------------------------
+
+ 
+Current depth: 6 Nodes searched: 910000 Nodes remaining: 8867685 
+Solution found
+
+Solution sequence: D' F' B L D' F
+
+real	0m0.775s
+user	0m0.363s
+sys	0m0.231s
+----------------------------------------
+Running with depth=7, threads=
+Shuffle: R' F' D L' B' F D
+Command: time  ./3cube_solver --solver E --shuffle "R' F' D L' B' F D"
+
+ 
+       Cube Solver - Configuration
+--------------------------------------------
+    Solver type:         E
+    Use hash:            false
+    Number of moves:     7
+    Shuffle sequence:    R' F' D L' B' F D
+    Max depth:           20
+--------------------------------------------
+
+ 
+Current depth: 7 Nodes searched: 9850000 Nodes remaining: 95984076 
+Solution found
+
+Solution sequence: D' F' B L D' F R
+
+real	0m10.109s
+user	0m4.313s
+sys	0m5.627s
+----------------------------------------
+Running with depth=8, threads=
+Shuffle: R' F' D L' B' F D U'
+Command: time  ./3cube_solver --solver E --shuffle "R' F' D L' B' F D U'"
+
+ 
+       Cube Solver - Configuration
+--------------------------------------------
+    Solver type:         E
+    Use hash:            false
+    Number of moves:     8
+    Shuffle sequence:    R' F' D L' B' F D U'
+    Max depth:           20
+--------------------------------------------
+
+ 
+Current depth: 8 Nodes searched: 45620000 Nodes remaining: 444547084 
+Solution found
+
+Solution sequence: U D' F' B L D' F R
+
+real	0m34.713s
+user	0m18.338s
+sys	0m11.971s
+----------------------------------------
