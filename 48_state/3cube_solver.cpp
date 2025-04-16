@@ -1132,6 +1132,14 @@ vector<uint8_t> SOLVE_B_PARALLEL(const CubeState& c_orig, int max_depth = 20) {
         bool local_solution_found = false;
         CubeState meeting_state;
         
+        // Extract all states from the queue first to avoid parallel queue access
+        vector<pair<CubeState, CompactSequence>> forward_level_states;
+        forward_level_states.reserve(forward_level_size);
+        for (int i = 0; i < forward_level_size; i++) {
+            forward_level_states.push_back(forward_queue.front());
+            forward_queue.pop();
+        }
+        
         #pragma omp parallel
         {
             // Thread-local storage for new states
@@ -1142,17 +1150,13 @@ vector<uint8_t> SOLVE_B_PARALLEL(const CubeState& c_orig, int max_depth = 20) {
             
             #pragma omp for reduction(+:nodes_searched) schedule(dynamic, 64)
             for (int i = 0; i < forward_level_size; i++) {
-                // Get next state from queue (need to maintain order in BFS)
-                pair<CubeState, CompactSequence> current_pair;
-                
-                #pragma omp critical(forward_queue_access)
-                {
-                    current_pair = forward_queue.front();
-                    forward_queue.pop();
+                // Skip processing if a solution has already been found
+                if (local_solution_found || thread_found_solution) {
+                    continue; // Skip this iteration instead of breaking
                 }
                 
-                const CubeState& current_state = current_pair.first;
-                const CompactSequence& move_sequence = current_pair.second;
+                const CubeState& current_state = forward_level_states[i].first;
+                const CompactSequence& move_sequence = forward_level_states[i].second;
                 
                 uint8_t seq_size = move_sequence.size();
                 
@@ -1172,6 +1176,11 @@ vector<uint8_t> SOLVE_B_PARALLEL(const CubeState& c_orig, int max_depth = 20) {
                 
                 // Try each allowed move
                 for (auto move : allowed_moves) {
+                    // Skip if a solution has been found
+                    if (thread_found_solution || local_solution_found) {
+                        continue;
+                    }
+                    
                     CubeState next_state = current_state;
                     MOVE_CUBE(next_state, move);
                     
@@ -1216,7 +1225,7 @@ vector<uint8_t> SOLVE_B_PARALLEL(const CubeState& c_orig, int max_depth = 20) {
                                 meeting_state = thread_meeting_state;
                             }
                         }
-                        break;
+                        continue; // Skip remaining moves instead of breaking
                     }
                     
                     // Add to thread's collection of new states
@@ -1224,18 +1233,16 @@ vector<uint8_t> SOLVE_B_PARALLEL(const CubeState& c_orig, int max_depth = 20) {
                 }
                 
                 nodes_searched++;
-                
-                if (thread_found_solution) {
-                    break; // Exit the loop early if this thread found a solution
-                }
             }
             
             // Merge thread-local collections into shared collection
-            #pragma omp critical(forward_new_states_update)
-            {
-                forward_new_states.insert(forward_new_states.end(), 
-                                          thread_new_states.begin(), 
-                                          thread_new_states.end());
+            if (!thread_new_states.empty()) {
+                #pragma omp critical(forward_new_states_update)
+                {
+                    forward_new_states.insert(forward_new_states.end(), 
+                                             thread_new_states.begin(), 
+                                             thread_new_states.end());
+                }
             }
         }
         
@@ -1269,6 +1276,14 @@ vector<uint8_t> SOLVE_B_PARALLEL(const CubeState& c_orig, int max_depth = 20) {
         
         local_solution_found = false;
         
+        // Extract all states from the queue first to avoid parallel queue access
+        vector<pair<CubeState, CompactSequence>> backward_level_states;
+        backward_level_states.reserve(backward_level_size);
+        for (int i = 0; i < backward_level_size; i++) {
+            backward_level_states.push_back(backward_queue.front());
+            backward_queue.pop();
+        }
+        
         #pragma omp parallel
         {
             // Thread-local storage for new states
@@ -1279,17 +1294,13 @@ vector<uint8_t> SOLVE_B_PARALLEL(const CubeState& c_orig, int max_depth = 20) {
             
             #pragma omp for reduction(+:nodes_searched) schedule(dynamic, 64)
             for (int i = 0; i < backward_level_size; i++) {
-                // Get next state from queue (need to maintain order in BFS)
-                pair<CubeState, CompactSequence> current_pair;
-                
-                #pragma omp critical(backward_queue_access)
-                {
-                    current_pair = backward_queue.front();
-                    backward_queue.pop();
+                // Skip processing if a solution has already been found
+                if (local_solution_found || thread_found_solution) {
+                    continue; // Skip this iteration instead of breaking
                 }
                 
-                const CubeState& current_state = current_pair.first;
-                const CompactSequence& move_sequence = current_pair.second;
+                const CubeState& current_state = backward_level_states[i].first;
+                const CompactSequence& move_sequence = backward_level_states[i].second;
                 
                 uint8_t seq_size = move_sequence.size();
                 
@@ -1315,6 +1326,11 @@ vector<uint8_t> SOLVE_B_PARALLEL(const CubeState& c_orig, int max_depth = 20) {
                 
                 // Try each allowed move
                 for (auto move : allowed_moves) {
+                    // Skip if a solution has been found
+                    if (thread_found_solution || local_solution_found) {
+                        continue;
+                    }
+                    
                     CubeState next_state = current_state;
                     MOVE_CUBE(next_state, move);
                     
@@ -1359,7 +1375,7 @@ vector<uint8_t> SOLVE_B_PARALLEL(const CubeState& c_orig, int max_depth = 20) {
                                 meeting_state = thread_meeting_state;
                             }
                         }
-                        break;
+                        continue; // Skip remaining moves instead of breaking
                     }
                     
                     // Add to thread's collection of new states
@@ -1367,18 +1383,16 @@ vector<uint8_t> SOLVE_B_PARALLEL(const CubeState& c_orig, int max_depth = 20) {
                 }
                 
                 nodes_searched++;
-                
-                if (thread_found_solution) {
-                    break; // Exit the loop early if this thread found a solution
-                }
             }
             
             // Merge thread-local collections into shared collection
-            #pragma omp critical(backward_new_states_update)
-            {
-                backward_new_states.insert(backward_new_states.end(), 
-                                           thread_new_states.begin(), 
-                                           thread_new_states.end());
+            if (!thread_new_states.empty()) {
+                #pragma omp critical(backward_new_states_update)
+                {
+                    backward_new_states.insert(backward_new_states.end(), 
+                                              thread_new_states.begin(), 
+                                              thread_new_states.end());
+                }
             }
         }
         
