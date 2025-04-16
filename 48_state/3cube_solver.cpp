@@ -16,6 +16,8 @@
 #include <array>
 #include <omp.h>
 #include <atomic>
+#include <mutex>
+#include <thread>
 
 
 using namespace std;
