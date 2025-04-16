@@ -1,0 +1,660 @@
+Running with depth=4, threads=2
+Shuffle: D L' B' F
+Command: time OMP_NUM_THREADS=2 ./3cube_solver --solver E --n_moves 4 --max_depth 4 --shuffle "D L' B' F"
+
+ 
+       Cube Solver - Configuration
+--------------------------------------------
+    Solver type:         E
+    Use hash:            false
+    Number of moves:     4
+    Shuffle sequence:    D L' B' F
+    Max depth:           4
+--------------------------------------------
+
+ 
+Solver Status:
+[Depth 1] Nodes to expand: 144
+
+[Depth 2] Nodes to expand: 1544
+
+[Depth 3] Nodes to expand: 16592
+Solution found!
+
+Solution sequence: B F' L D'
+
+real	0m0.021s
+user	0m0.013s
+sys	0m0.006s
+----------------------------------------
+Running with depth=4, threads=4
+Shuffle: D L' B' F
+Command: time OMP_NUM_THREADS=4 ./3cube_solver --solver E --n_moves 4 --max_depth 4 --shuffle "D L' B' F"
+
+ 
+       Cube Solver - Configuration
+--------------------------------------------
+    Solver type:         E
+    Use hash:            false
+    Number of moves:     4
+    Shuffle sequence:    D L' B' F
+    Max depth:           4
+--------------------------------------------
+
+ 
+Solver Status:
+[Depth 1] Nodes to expand: 144
+
+[Depth 2] Nodes to expand: 1544
+
+[Depth 3] Nodes to expand: 16592
+Solution found!
+
+Solution sequence: F' B L D'
+
+real	0m0.031s
+user	0m0.032s
+sys	0m0.009s
+----------------------------------------
+Running with depth=4, threads=8
+Shuffle: D L' B' F
+Command: time OMP_NUM_THREADS=8 ./3cube_solver --solver E --n_moves 4 --max_depth 4 --shuffle "D L' B' F"
+
+ 
+       Cube Solver - Configuration
+--------------------------------------------
+    Solver type:         E
+    Use hash:            false
+    Number of moves:     4
+    Shuffle sequence:    D L' B' F
+    Max depth:           4
+--------------------------------------------
+
+ 
+Solver Status:
+[Depth 1] Nodes to expand: 144
+
+[Depth 2] Nodes to expand: 1544
+
+[Depth 3] Nodes to expand: 16592
+Solution found!
+
+Solution sequence: F' B L D'
+
+real	0m0.037s
+user	0m0.072s
+sys	0m0.010s
+----------------------------------------
+Running with depth=4, threads=16
+Shuffle: D L' B' F
+Command: time OMP_NUM_THREADS=16 ./3cube_solver --solver E --n_moves 4 --max_depth 4 --shuffle "D L' B' F"
+
+ 
+       Cube Solver - Configuration
+--------------------------------------------
+    Solver type:         E
+    Use hash:            false
+    Number of moves:     4
+    Shuffle sequence:    D L' B' F
+    Max depth:           4
+--------------------------------------------
+
+ 
+Solver Status:
+[Depth 1] Nodes to expand: 144
+
+[Depth 2] Nodes to expand: 1544
+
+[Depth 3] Nodes to expand: 16592
+Solution found!
+
+Solution sequence: F' B L D'
+
+real	0m0.062s
+user	0m0.163s
+sys	0m0.017s
+----------------------------------------
+Running with depth=5, threads=2
+Shuffle: D L' B' F D
+Command: time OMP_NUM_THREADS=2 ./3cube_solver --solver E --n_moves 5 --max_depth 5 --shuffle "D L' B' F D"
+
+ 
+       Cube Solver - Configuration
+--------------------------------------------
+    Solver type:         E
+    Use hash:            false
+    Number of moves:     5
+    Shuffle sequence:    D L' B' F D
+    Max depth:           5
+--------------------------------------------
+
+ 
+Solver Status:
+[Depth 1] Nodes to expand: 144
+
+[Depth 2] Nodes to expand: 1544
+
+[Depth 3] Nodes to expand: 16592
+
+[Depth 4] Nodes to expand: 178272
+Solution found!
+
+Solution sequence: D' F' B L D'
+
+real	0m0.064s
+user	0m0.069s
+sys	0m0.020s
+----------------------------------------
+Running with depth=5, threads=4
+Shuffle: D L' B' F D
+Command: time OMP_NUM_THREADS=4 ./3cube_solver --solver E --n_moves 5 --max_depth 5 --shuffle "D L' B' F D"
+
+ 
+       Cube Solver - Configuration
+--------------------------------------------
+    Solver type:         E
+    Use hash:            false
+    Number of moves:     5
+    Shuffle sequence:    D L' B' F D
+    Max depth:           5
+--------------------------------------------
+
+ 
+Solver Status:
+[Depth 1] Nodes to expand: 144
+
+[Depth 2] Nodes to expand: 1544
+
+[Depth 3] Nodes to expand: 16592
+
+[Depth 4] Nodes to expand: 178272
+Solution found!
+
+Solution sequence: D' F' B L D'
+
+real	0m0.109s
+user	0m0.111s
+sys	0m0.020s
+----------------------------------------
+Running with depth=5, threads=8
+Shuffle: D L' B' F D
+Command: time OMP_NUM_THREADS=8 ./3cube_solver --solver E --n_moves 5 --max_depth 5 --shuffle "D L' B' F D"
+
+ 
+       Cube Solver - Configuration
+--------------------------------------------
+    Solver type:         E
+    Use hash:            false
+    Number of moves:     5
+    Shuffle sequence:    D L' B' F D
+    Max depth:           5
+--------------------------------------------
+
+ 
+Solver Status:
+[Depth 1] Nodes to expand: 144
+
+[Depth 2] Nodes to expand: 1544
+
+[Depth 3] Nodes to expand: 16592
+
+[Depth 4] Nodes to expand: 178272
+Solution found!
+
+Solution sequence: D' F' B L D'
+
+real	0m0.166s
+user	0m0.320s
+sys	0m0.025s
+----------------------------------------
+Running with depth=5, threads=16
+Shuffle: D L' B' F D
+Command: time OMP_NUM_THREADS=16 ./3cube_solver --solver E --n_moves 5 --max_depth 5 --shuffle "D L' B' F D"
+
+ 
+       Cube Solver - Configuration
+--------------------------------------------
+    Solver type:         E
+    Use hash:            false
+    Number of moves:     5
+    Shuffle sequence:    D L' B' F D
+    Max depth:           5
+--------------------------------------------
+
+ 
+Solver Status:
+[Depth 1] Nodes to expand: 144
+
+[Depth 2] Nodes to expand: 1544
+
+[Depth 3] Nodes to expand: 16592
+
+[Depth 4] Nodes to expand: 178272
+Solution found!
+
+Solution sequence: D' B F' L D'
+
+real	0m0.269s
+user	0m1.266s
+sys	0m0.045s
+----------------------------------------
+Running with depth=6, threads=2
+Shuffle: F' D L' B' F D
+Command: time OMP_NUM_THREADS=2 ./3cube_solver --solver E --n_moves 6 --max_depth 6 --shuffle "F' D L' B' F D"
+
+ 
+       Cube Solver - Configuration
+--------------------------------------------
+    Solver type:         E
+    Use hash:            false
+    Number of moves:     6
+    Shuffle sequence:    F' D L' B' F D
+    Max depth:           6
+--------------------------------------------
+
+ 
+Solver Status:
+[Depth 1] Nodes to expand: 144
+
+[Depth 2] Nodes to expand: 1544
+
+[Depth 3] Nodes to expand: 16592
+
+[Depth 4] Nodes to expand: 178272
+
+[Depth 5] Nodes to expand: 1915456
+Solution found!
+
+Solution sequence: D' F' B L D' F
+
+real	0m0.496s
+user	0m0.646s
+sys	0m0.056s
+----------------------------------------
+Running with depth=6, threads=4
+Shuffle: F' D L' B' F D
+Command: time OMP_NUM_THREADS=4 ./3cube_solver --solver E --n_moves 6 --max_depth 6 --shuffle "F' D L' B' F D"
+
+ 
+       Cube Solver - Configuration
+--------------------------------------------
+    Solver type:         E
+    Use hash:            false
+    Number of moves:     6
+    Shuffle sequence:    F' D L' B' F D
+    Max depth:           6
+--------------------------------------------
+
+ 
+Solver Status:
+[Depth 1] Nodes to expand: 144
+
+[Depth 2] Nodes to expand: 1544
+
+[Depth 3] Nodes to expand: 16592
+
+[Depth 4] Nodes to expand: 178272
+
+[Depth 5] Nodes to expand: 1915456
+Solution found!
+
+Solution sequence: D' F' B L D' F
+
+real	0m0.704s
+user	0m1.748s
+sys	0m0.104s
+----------------------------------------
+Running with depth=6, threads=8
+Shuffle: F' D L' B' F D
+Command: time OMP_NUM_THREADS=8 ./3cube_solver --solver E --n_moves 6 --max_depth 6 --shuffle "F' D L' B' F D"
+
+ 
+       Cube Solver - Configuration
+--------------------------------------------
+    Solver type:         E
+    Use hash:            false
+    Number of moves:     6
+    Shuffle sequence:    F' D L' B' F D
+    Max depth:           6
+--------------------------------------------
+
+ 
+Solver Status:
+[Depth 1] Nodes to expand: 144
+
+[Depth 2] Nodes to expand: 1544
+
+[Depth 3] Nodes to expand: 16592
+
+[Depth 4] Nodes to expand: 178272
+
+[Depth 5] Nodes to expand: 1915456
+Solution found!
+
+Solution sequence: D' F' B L D' F
+
+real	0m0.845s
+user	0m2.817s
+sys	0m0.255s
+----------------------------------------
+Running with depth=6, threads=16
+Shuffle: F' D L' B' F D
+Command: time OMP_NUM_THREADS=16 ./3cube_solver --solver E --n_moves 6 --max_depth 6 --shuffle "F' D L' B' F D"
+
+ 
+       Cube Solver - Configuration
+--------------------------------------------
+    Solver type:         E
+    Use hash:            false
+    Number of moves:     6
+    Shuffle sequence:    F' D L' B' F D
+    Max depth:           6
+--------------------------------------------
+
+ 
+Solver Status:
+[Depth 1] Nodes to expand: 144
+
+[Depth 2] Nodes to expand: 1544
+
+[Depth 3] Nodes to expand: 16592
+
+[Depth 4] Nodes to expand: 178272
+
+[Depth 5] Nodes to expand: 1915456
+Solution found!
+
+Solution sequence: D' F' B L D' F
+
+real	0m0.971s
+user	0m6.018s
+sys	0m0.565s
+----------------------------------------
+Running with depth=7, threads=2
+Shuffle: R' F' D L' B' F D
+Command: time OMP_NUM_THREADS=2 ./3cube_solver --solver E --n_moves 7 --max_depth 7 --shuffle "R' F' D L' B' F D"
+
+ 
+       Cube Solver - Configuration
+--------------------------------------------
+    Solver type:         E
+    Use hash:            false
+    Number of moves:     7
+    Shuffle sequence:    R' F' D L' B' F D
+    Max depth:           7
+--------------------------------------------
+
+ 
+Solver Status:
+[Depth 1] Nodes to expand: 144
+
+[Depth 2] Nodes to expand: 1544
+
+[Depth 3] Nodes to expand: 16592
+
+[Depth 4] Nodes to expand: 178272
+
+[Depth 5] Nodes to expand: 1915456
+
+[Depth 6] Nodes to expand: 20580736
+Solution found!
+
+Solution sequence: D' F' B L D' F R
+
+real	0m4.857s
+user	0m7.403s
+sys	0m0.561s
+----------------------------------------
+Running with depth=7, threads=4
+Shuffle: R' F' D L' B' F D
+Command: time OMP_NUM_THREADS=4 ./3cube_solver --solver E --n_moves 7 --max_depth 7 --shuffle "R' F' D L' B' F D"
+
+ 
+       Cube Solver - Configuration
+--------------------------------------------
+    Solver type:         E
+    Use hash:            false
+    Number of moves:     7
+    Shuffle sequence:    R' F' D L' B' F D
+    Max depth:           7
+--------------------------------------------
+
+ 
+Solver Status:
+[Depth 1] Nodes to expand: 144
+
+[Depth 2] Nodes to expand: 1544
+
+[Depth 3] Nodes to expand: 16592
+
+[Depth 4] Nodes to expand: 178272
+
+[Depth 5] Nodes to expand: 1915456
+
+[Depth 6] Nodes to expand: 20580736
+Solution found!
+
+Solution sequence: D' F' B L D' F R
+
+real	0m6.977s
+user	0m21.351s
+sys	0m0.368s
+----------------------------------------
+Running with depth=7, threads=8
+Shuffle: R' F' D L' B' F D
+Command: time OMP_NUM_THREADS=8 ./3cube_solver --solver E --n_moves 7 --max_depth 7 --shuffle "R' F' D L' B' F D"
+
+ 
+       Cube Solver - Configuration
+--------------------------------------------
+    Solver type:         E
+    Use hash:            false
+    Number of moves:     7
+    Shuffle sequence:    R' F' D L' B' F D
+    Max depth:           7
+--------------------------------------------
+
+ 
+Solver Status:
+[Depth 1] Nodes to expand: 144
+
+[Depth 2] Nodes to expand: 1544
+
+[Depth 3] Nodes to expand: 16592
+
+[Depth 4] Nodes to expand: 178272
+
+[Depth 5] Nodes to expand: 1915456
+
+[Depth 6] Nodes to expand: 20580736
+Solution found!
+
+Solution sequence: D' F' B L D' F R
+
+real	0m8.237s
+user	0m42.268s
+sys	0m1.068s
+----------------------------------------
+Running with depth=7, threads=16
+Shuffle: R' F' D L' B' F D
+Command: time OMP_NUM_THREADS=16 ./3cube_solver --solver E --n_moves 7 --max_depth 7 --shuffle "R' F' D L' B' F D"
+
+ 
+       Cube Solver - Configuration
+--------------------------------------------
+    Solver type:         E
+    Use hash:            false
+    Number of moves:     7
+    Shuffle sequence:    R' F' D L' B' F D
+    Max depth:           7
+--------------------------------------------
+
+ 
+Solver Status:
+[Depth 1] Nodes to expand: 144
+
+[Depth 2] Nodes to expand: 1544
+
+[Depth 3] Nodes to expand: 16592
+
+[Depth 4] Nodes to expand: 178272
+
+[Depth 5] Nodes to expand: 1915456
+
+[Depth 6] Nodes to expand: 20580736
+Solution found!
+
+Solution sequence: D' F' B L D' F R
+
+real	0m9.092s
+user	1m14.692s
+sys	0m7.417s
+----------------------------------------
+Running with depth=8, threads=2
+Shuffle: R' F' D L' B' F D U'
+Command: time OMP_NUM_THREADS=2 ./3cube_solver --solver E --n_moves 8 --max_depth 8 --shuffle "R' F' D L' B' F D U'"
+
+ 
+       Cube Solver - Configuration
+--------------------------------------------
+    Solver type:         E
+    Use hash:            false
+    Number of moves:     8
+    Shuffle sequence:    R' F' D L' B' F D U'
+    Max depth:           8
+--------------------------------------------
+
+ 
+Solver Status:
+[Depth 1] Nodes to expand: 144
+
+[Depth 2] Nodes to expand: 1544
+
+[Depth 3] Nodes to expand: 16592
+
+[Depth 4] Nodes to expand: 178272
+
+[Depth 5] Nodes to expand: 1915456
+
+[Depth 6] Nodes to expand: 20580736
+
+[Depth 7] Nodes to expand: 221131008
+Solution found!
+
+Solution sequence: U D' F' B L D' F R
+
+real	0m34.159s
+user	0m50.939s
+sys	0m3.741s
+----------------------------------------
+Running with depth=8, threads=4
+Shuffle: R' F' D L' B' F D U'
+Command: time OMP_NUM_THREADS=4 ./3cube_solver --solver E --n_moves 8 --max_depth 8 --shuffle "R' F' D L' B' F D U'"
+
+ 
+       Cube Solver - Configuration
+--------------------------------------------
+    Solver type:         E
+    Use hash:            false
+    Number of moves:     8
+    Shuffle sequence:    R' F' D L' B' F D U'
+    Max depth:           8
+--------------------------------------------
+
+ 
+Solver Status:
+[Depth 1] Nodes to expand: 144
+
+[Depth 2] Nodes to expand: 1544
+
+[Depth 3] Nodes to expand: 16592
+
+[Depth 4] Nodes to expand: 178272
+
+[Depth 5] Nodes to expand: 1915456
+
+[Depth 6] Nodes to expand: 20580736
+
+[Depth 7] Nodes to expand: 221131008
+Solution found!
+
+Solution sequence: D' U F' B L D' F R
+
+real	1m14.228s
+user	3m52.041s
+sys	0m7.400s
+----------------------------------------
+Running with depth=8, threads=8
+Shuffle: R' F' D L' B' F D U'
+Command: time OMP_NUM_THREADS=8 ./3cube_solver --solver E --n_moves 8 --max_depth 8 --shuffle "R' F' D L' B' F D U'"
+
+ 
+       Cube Solver - Configuration
+--------------------------------------------
+    Solver type:         E
+    Use hash:            false
+    Number of moves:     8
+    Shuffle sequence:    R' F' D L' B' F D U'
+    Max depth:           8
+--------------------------------------------
+
+ 
+Solver Status:
+[Depth 1] Nodes to expand: 144
+
+[Depth 2] Nodes to expand: 1544
+
+[Depth 3] Nodes to expand: 16592
+
+[Depth 4] Nodes to expand: 178272
+
+[Depth 5] Nodes to expand: 1915456
+
+[Depth 6] Nodes to expand: 20580736
+
+[Depth 7] Nodes to expand: 221131008
+Solution found!
+
+Solution sequence: U D' F' B L D' F R
+
+real	1m12.865s
+user	5m57.435s
+sys	0m23.939s
+----------------------------------------
+Running with depth=8, threads=16
+Shuffle: R' F' D L' B' F D U'
+Command: time OMP_NUM_THREADS=16 ./3cube_solver --solver E --n_moves 8 --max_depth 8 --shuffle "R' F' D L' B' F D U'"
+
+ 
+       Cube Solver - Configuration
+--------------------------------------------
+    Solver type:         E
+    Use hash:            false
+    Number of moves:     8
+    Shuffle sequence:    R' F' D L' B' F D U'
+    Max depth:           8
+--------------------------------------------
+
+ 
+Solver Status:
+[Depth 1] Nodes to expand: 144
+
+[Depth 2] Nodes to expand: 1544
+
+[Depth 3] Nodes to expand: 16592
+
+[Depth 4] Nodes to expand: 178272
+
+[Depth 5] Nodes to expand: 1915456
+
+[Depth 6] Nodes to expand: 20580736
+
+[Depth 7] Nodes to expand: 221131008
+Solution found!
+
+Solution sequence: U D' F' B L D' F R
+
+real	1m37.588s
+user	13m19.529s
+sys	0m54.875s
+----------------------------------------
