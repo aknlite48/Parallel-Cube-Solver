@@ -1079,15 +1079,6 @@ vector<uint8_t> SOLVE_B_PARALLEL(const CubeState& c_orig, int max_depth = 20) {
         return sol;
     }
     
-    // Shared data structures need careful handling in parallel code
-    // We will use thread-local storage for intermediate results
-    unordered_map<CubeState, CompactSequence> forward_visited;
-    unordered_map<CubeState, CompactSequence> backward_visited;
-    
-    // Initial queues for forward and backward search
-    queue<pair<CubeState, CompactSequence>> forward_queue;
-    queue<pair<CubeState, CompactSequence>> backward_queue;
-    
     // Inverse move mapping - for the backward search
     unordered_map<uint8_t, uint8_t> inverse_move = {
         {AV_MOVE::u, AV_MOVE::ui}, {AV_MOVE::ui, AV_MOVE::u},
@@ -1097,6 +1088,14 @@ vector<uint8_t> SOLVE_B_PARALLEL(const CubeState& c_orig, int max_depth = 20) {
         {AV_MOVE::f, AV_MOVE::fi}, {AV_MOVE::fi, AV_MOVE::f},
         {AV_MOVE::b, AV_MOVE::bi}, {AV_MOVE::bi, AV_MOVE::b}
     };
+    
+    // Shared data structures for storing visited states
+    unordered_map<CubeState, CompactSequence> forward_visited;
+    unordered_map<CubeState, CompactSequence> backward_visited;
+    
+    // Initial queues for forward and backward search
+    queue<pair<CubeState, CompactSequence>> forward_queue;
+    queue<pair<CubeState, CompactSequence>> backward_queue;
     
     // Initialize forward search with initial state
     forward_queue.push({c_orig, CompactSequence()});
@@ -1110,9 +1109,6 @@ vector<uint8_t> SOLVE_B_PARALLEL(const CubeState& c_orig, int max_depth = 20) {
     int nodes_searched = 0;
     bool solution_found = false;
     CompactSequence forward_path, backward_path;
-    
-    // Used for thread synchronization
-    #pragma omp threadprivate(forward_path, backward_path)
     
     // Main search loop with parallelization
     while (!forward_queue.empty() && !backward_queue.empty() && !solution_found) {
@@ -1266,7 +1262,6 @@ vector<uint8_t> SOLVE_B_PARALLEL(const CubeState& c_orig, int max_depth = 20) {
             // Thread-local container for next level states
             vector<pair<CubeState, CompactSequence>> thread_backward_next;
             bool thread_solution_found = false;
-            CompactSequence thread_forward_path, thread_backward_path;
             
             #pragma omp for schedule(dynamic)
             for (size_t i = 0; i < backward_level_states.size(); i++) {
@@ -1570,7 +1565,7 @@ int main (int argc, char* argv[]) {
     printf("Solver Status:");
 
     //apply solver
-    vector<uint8_t> final_seq = (solver_type=='E') ? SOLVE_E(cube,use_hash,max_depth) : SOLVE_B(cube,max_depth);
+    vector<uint8_t> final_seq = (solver_type=='E') ? SOLVE_E(cube,use_hash,max_depth) : SOLVE_B_PARALLEL(cube,max_depth);
 
     //vector<uint8_t> final_seq = SOLVE_E(cube,use_hash,max_depth);
     //vector<uint8_t> final_seq = solveCubeBidirectional(cube);
