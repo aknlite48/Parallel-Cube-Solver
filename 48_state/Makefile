@@ -1,5 +1,5 @@
 CXX = g++
-CXXFLAGS = -std=c++17 -Wall -Wextra -O2
+CXXFLAGS = -std=c++17 -Wall -Wextra -O2 -fopenmp
 TARGET = 3cube_solver
 SRC = 3cube_solver.cpp
 
