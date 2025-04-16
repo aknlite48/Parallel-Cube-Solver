@@ -1119,48 +1119,55 @@ vector<uint8_t> SOLVE_B_PARALLEL(const CubeState& c_orig, int max_depth = 20) {
     int nodes_searched = 0;
     bool solution_found = false;
     CompactSequence forward_path, backward_path;
+    CubeState meeting_state;
+    
+    // Set number of threads - if not specified by environment variable
+    #pragma omp parallel
+    {
+        #pragma omp master
+        {
+            cout << "Running with " << omp_get_num_threads() << " threads" << endl;
+        }
+    }
     
     // Main search loop
     while (!forward_queue.empty() && !backward_queue.empty() && !solution_found) {
-        // Expand forward search by one level
+        // ===== FORWARD SEARCH =====
         int forward_level_size = forward_queue.size();
         
-        // Store new states to be added to the queue after parallel processing
-        vector<pair<CubeState, CompactSequence>> forward_new_states;
-        forward_new_states.reserve(forward_level_size * 12); // Pre-allocate space (max 12 moves per state)
-        
-        bool local_solution_found = false;
-        CubeState meeting_state;
-        
-        // Extract all states from the queue first to avoid parallel queue access
+        // Extract all current level states from the queue to process them in parallel
         vector<pair<CubeState, CompactSequence>> forward_level_states;
         forward_level_states.reserve(forward_level_size);
+        
         for (int i = 0; i < forward_level_size; i++) {
             forward_level_states.push_back(forward_queue.front());
             forward_queue.pop();
         }
         
+        // Process states in parallel and collect results
+        vector<vector<pair<CubeState, CompactSequence>>> thread_results;
+        
         #pragma omp parallel
         {
-            // Thread-local storage for new states
-            vector<pair<CubeState, CompactSequence>> thread_new_states;
-            thread_new_states.reserve(forward_level_size * 12 / omp_get_num_threads());
-            bool thread_found_solution = false;
-            CubeState thread_meeting_state;
+            int thread_id = omp_get_thread_num();
             
-            #pragma omp for reduction(+:nodes_searched) schedule(dynamic, 64)
+            #pragma omp single
+            {
+                thread_results.resize(omp_get_num_threads());
+            }
+            
+            vector<pair<CubeState, CompactSequence>> local_new_states;
+            local_new_states.reserve(forward_level_size * 12 / omp_get_num_threads());
+            
+            #pragma omp for schedule(dynamic, 16)
             for (int i = 0; i < forward_level_size; i++) {
-                // Skip processing if a solution has already been found
-                if (local_solution_found || thread_found_solution) {
-                    continue; // Skip this iteration instead of breaking
-                }
-                
+                // Process this state
                 const CubeState& current_state = forward_level_states[i].first;
                 const CompactSequence& move_sequence = forward_level_states[i].second;
                 
                 uint8_t seq_size = move_sequence.size();
                 
-                // Check depth limit
+                // Skip if already too deep
                 if (seq_size >= max_depth / 2) {
                     continue;
                 }
@@ -1174,137 +1181,92 @@ vector<uint8_t> SOLVE_B_PARALLEL(const CubeState& c_orig, int max_depth = 20) {
                     MOVES_LOOKUP[second_last_move][last_move] : 
                     (seq_size > 0 ? MOVES[last_move] : MOVE_LIST);
                 
-                // Try each allowed move
+                // Generate next states
                 for (auto move : allowed_moves) {
-                    // Skip if a solution has been found
-                    if (thread_found_solution || local_solution_found) {
-                        continue;
-                    }
-                    
                     CubeState next_state = current_state;
                     MOVE_CUBE(next_state, move);
-                    
-                    bool already_visited = false;
-                    
-                    #pragma omp critical(forward_visited_access)
-                    {
-                        // Skip if already visited in forward search
-                        already_visited = (forward_visited.find(next_state) != forward_visited.end());
-                    }
-                    
-                    if (already_visited) {
-                        continue;
-                    }
                     
                     // Create new move sequence
                     CompactSequence next_sequence = move_sequence;
                     next_sequence.push_back(move);
                     
-                    bool found_meeting_point = false;
-                    
-                    #pragma omp critical(backward_visited_access)
-                    {
-                        // Store in visited states
-                        forward_visited[next_state] = next_sequence;
-                        
-                        // Check if this state has been visited in backward search
-                        if (!thread_found_solution && !local_solution_found && 
-                            backward_visited.find(next_state) != backward_visited.end()) {
-                            // Found a meeting point - potential solution!
-                            thread_found_solution = true;
-                            thread_meeting_state = next_state;
-                            found_meeting_point = true;
-                        }
-                    }
-                    
-                    if (found_meeting_point) {
-                        #pragma omp critical(solution_update)
-                        {
-                            if (!local_solution_found) {
-                                local_solution_found = true;
-                                meeting_state = thread_meeting_state;
-                            }
-                        }
-                        continue; // Skip remaining moves instead of breaking
-                    }
-                    
-                    // Add to thread's collection of new states
-                    thread_new_states.push_back({next_state, next_sequence});
+                    // Add to local results (will process later)
+                    local_new_states.push_back({next_state, next_sequence});
                 }
                 
                 nodes_searched++;
             }
             
-            // Merge thread-local collections into shared collection
-            if (!thread_new_states.empty()) {
-                #pragma omp critical(forward_new_states_update)
-                {
-                    forward_new_states.insert(forward_new_states.end(), 
-                                             thread_new_states.begin(), 
-                                             thread_new_states.end());
+            // Store local results
+            thread_results[thread_id] = std::move(local_new_states);
+        }
+        
+        // Now process all the new states sequentially to ensure thread safety
+        for (auto& thread_states : thread_results) {
+            for (auto& [next_state, next_sequence] : thread_states) {
+                // Skip if already visited in forward search
+                if (forward_visited.find(next_state) != forward_visited.end()) {
+                    continue;
                 }
+                
+                // Store in visited states
+                forward_visited[next_state] = next_sequence;
+                
+                // Check if this state has been visited in backward search
+                if (backward_visited.find(next_state) != backward_visited.end()) {
+                    // Found a meeting point - solution found!
+                    forward_path = next_sequence;
+                    backward_path = backward_visited[next_state];
+                    meeting_state = next_state;
+                    solution_found = true;
+                    break;
+                }
+                
+                // Add to queue for next level
+                forward_queue.push({next_state, next_sequence});
             }
-        }
-        
-        // Check if a solution was found
-        if (local_solution_found) {
-            forward_path = forward_visited[meeting_state];
-            backward_path = backward_visited[meeting_state];
-            solution_found = true;
-            break;
-        }
-        
-        // Add all new states to the queue
-        for (const auto& state_pair : forward_new_states) {
-            forward_queue.push(state_pair);
-        }
-        
-        if (nodes_searched % 10000 == 0) {
-            cout << "\r" << "Nodes searched: " << nodes_searched 
-                 << " Forward queue: " << forward_queue.size() 
-                 << " Backward queue: " << backward_queue.size();
+            
+            if (solution_found) break;
         }
         
         if (solution_found) break;
         
-        // Expand backward search by one level
+        // ===== BACKWARD SEARCH =====
         int backward_level_size = backward_queue.size();
         
-        // Store new states to be added to the queue after parallel processing
-        vector<pair<CubeState, CompactSequence>> backward_new_states;
-        backward_new_states.reserve(backward_level_size * 12); // Pre-allocate space
-        
-        local_solution_found = false;
-        
-        // Extract all states from the queue first to avoid parallel queue access
+        // Extract all current level states from the queue to process them in parallel
         vector<pair<CubeState, CompactSequence>> backward_level_states;
         backward_level_states.reserve(backward_level_size);
+        
         for (int i = 0; i < backward_level_size; i++) {
             backward_level_states.push_back(backward_queue.front());
             backward_queue.pop();
         }
         
+        // Process states in parallel and collect results
+        thread_results.clear();
+        
         #pragma omp parallel
         {
-            // Thread-local storage for new states
-            vector<pair<CubeState, CompactSequence>> thread_new_states;
-            thread_new_states.reserve(backward_level_size * 12 / omp_get_num_threads());
-            bool thread_found_solution = false;
-            CubeState thread_meeting_state;
+            int thread_id = omp_get_thread_num();
             
-            #pragma omp for reduction(+:nodes_searched) schedule(dynamic, 64)
+            #pragma omp single
+            {
+                thread_results.resize(omp_get_num_threads());
+            }
+            
+            vector<pair<CubeState, CompactSequence>> local_new_states;
+            local_new_states.reserve(backward_level_size * 12 / omp_get_num_threads());
+            
+            #pragma omp for schedule(dynamic, 16)
             for (int i = 0; i < backward_level_size; i++) {
-                // Skip processing if a solution has already been found
-                if (local_solution_found || thread_found_solution) {
-                    continue; // Skip this iteration instead of breaking
-                }
-                
+                // Process this state
                 const CubeState& current_state = backward_level_states[i].first;
                 const CompactSequence& move_sequence = backward_level_states[i].second;
                 
                 uint8_t seq_size = move_sequence.size();
                 
-                // Check depth limit
+                // Skip if already too deep
                 if (seq_size >= max_depth / 2) {
                     continue;
                 }
@@ -1324,95 +1286,60 @@ vector<uint8_t> SOLVE_B_PARALLEL(const CubeState& c_orig, int max_depth = 20) {
                     allowed_moves.push_back(inverse_move[move]);
                 }
                 
-                // Try each allowed move
+                // Generate next states
                 for (auto move : allowed_moves) {
-                    // Skip if a solution has been found
-                    if (thread_found_solution || local_solution_found) {
-                        continue;
-                    }
-                    
                     CubeState next_state = current_state;
                     MOVE_CUBE(next_state, move);
-                    
-                    bool already_visited = false;
-                    
-                    #pragma omp critical(backward_visited_access)
-                    {
-                        // Skip if already visited in backward search
-                        already_visited = (backward_visited.find(next_state) != backward_visited.end());
-                    }
-                    
-                    if (already_visited) {
-                        continue;
-                    }
                     
                     // Create new move sequence
                     CompactSequence next_sequence = move_sequence;
                     next_sequence.push_back(move);
                     
-                    bool found_meeting_point = false;
-                    
-                    #pragma omp critical(forward_visited_access)
-                    {
-                        // Store in visited states
-                        backward_visited[next_state] = next_sequence;
-                        
-                        // Check if this state has been visited in forward search
-                        if (!thread_found_solution && !local_solution_found && 
-                            forward_visited.find(next_state) != forward_visited.end()) {
-                            // Found a meeting point - potential solution!
-                            thread_found_solution = true;
-                            thread_meeting_state = next_state;
-                            found_meeting_point = true;
-                        }
-                    }
-                    
-                    if (found_meeting_point) {
-                        #pragma omp critical(solution_update)
-                        {
-                            if (!local_solution_found) {
-                                local_solution_found = true;
-                                meeting_state = thread_meeting_state;
-                            }
-                        }
-                        continue; // Skip remaining moves instead of breaking
-                    }
-                    
-                    // Add to thread's collection of new states
-                    thread_new_states.push_back({next_state, next_sequence});
+                    // Add to local results (will process later)
+                    local_new_states.push_back({next_state, next_sequence});
                 }
                 
                 nodes_searched++;
             }
             
-            // Merge thread-local collections into shared collection
-            if (!thread_new_states.empty()) {
-                #pragma omp critical(backward_new_states_update)
-                {
-                    backward_new_states.insert(backward_new_states.end(), 
-                                              thread_new_states.begin(), 
-                                              thread_new_states.end());
+            // Store local results
+            thread_results[thread_id] = std::move(local_new_states);
+        }
+        
+        // Now process all the new states sequentially to ensure thread safety
+        for (auto& thread_states : thread_results) {
+            for (auto& [next_state, next_sequence] : thread_states) {
+                // Skip if already visited in backward search
+                if (backward_visited.find(next_state) != backward_visited.end()) {
+                    continue;
                 }
+                
+                // Store in visited states
+                backward_visited[next_state] = next_sequence;
+                
+                // Check if this state has been visited in forward search
+                if (forward_visited.find(next_state) != forward_visited.end()) {
+                    // Found a meeting point - solution found!
+                    forward_path = forward_visited[next_state];
+                    backward_path = next_sequence;
+                    meeting_state = next_state;
+                    solution_found = true;
+                    break;
+                }
+                
+                // Add to queue for next level
+                backward_queue.push({next_state, next_sequence});
             }
-        }
-        
-        // Check if a solution was found
-        if (local_solution_found) {
-            forward_path = forward_visited[meeting_state];
-            backward_path = backward_visited[meeting_state];
-            solution_found = true;
-            break;
-        }
-        
-        // Add all new states to the queue
-        for (const auto& state_pair : backward_new_states) {
-            backward_queue.push(state_pair);
+            
+            if (solution_found) break;
         }
         
         if (nodes_searched % 10000 == 0) {
             cout << "\r" << "Nodes searched: " << nodes_searched 
                  << " Forward queue: " << forward_queue.size() 
-                 << " Backward queue: " << backward_queue.size();
+                 << " Backward queue: " << backward_queue.size() 
+                 << " Forward visited: " << forward_visited.size()
+                 << " Backward visited: " << backward_visited.size();
         }
     }
     
