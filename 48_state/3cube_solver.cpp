@@ -16,6 +16,8 @@
 #include <array>
 #include <omp.h>
 #include <atomic>
+// #include <mutex>
+// #include <thread>
 
 
 using namespace std;
@@ -657,101 +659,81 @@ vector<uint8_t> SOLVE_E(CubeState& c_orig,bool use_hash,uint8_t max_depth) { //c
     vector<uint8_t> sol;
 
     if (!use_hash) {
-    //CubeState c_orig(c);
-    CubeState solved;
-    //vector<uint8_t> sol;
-    if (c_orig==solved) {
-        cout << "already solved" << endl;
-        return sol;
-    }
-    queue<CompactSequence> Q;
-
-    //load single move states
-    for (uint8_t &i: MOVE_LIST) {
-        //vector<uint8_t> c1 = c_orig;
-        //MOVE(c1,i);
-        Q.push(CompactSequence({i}));
-    }
-    //load double move states
-    for (auto &i: MOVE_LIST) {
-        for (auto &j: MOVES[i]) {
-            Q.push(CompactSequence({i,j}));
-        }
-    }
-    int k=1;
-
-    //solve single move sequence: pops out all single move sequences
-    int iter=0;
-    while(!Q.empty() && (iter<12)) {
-        auto s_i = Q.front();
-        Q.pop();
-        uint8_t seq_size = s_i.size();
-
-        if (k%10000==0) {
-        cout << "\r" << "Current depth: " << (int)seq_size << " Nodes searched: " << k << " Nodes remaining: " << Q.size();
-        }
-
-
-        CubeState c_i = c_orig;
-        MOVE_CUBE_SEQUENCE(c_i,s_i);
-
-        if (c_i==solved) {
-            sol = s_i.toVector();
-            cout << " " << endl;
-            //cout << "\r" << "Current depth: " << depth << " Nodes searched: " << k << " Nodes remaining: " << Q.size();
-            cout << "Solution found" << endl;
+        CubeState solved;
+        if (c_orig == solved) {
+            cout << "already solved" << endl;
             return sol;
-            //break;
         }
-
-        auto last_move = s_i.back();
-        //const vector<uint8_t>& allowed_moves = ((seq_size>1) && (last_move==s_i[seq_size-2])) ? MOVES_DOUB[last_move] : MOVES[last_move] ;
-        const vector<uint8_t>& allowed_moves = MOVES[last_move];
-        for (auto &i: allowed_moves) {
-            CompactSequence s_ii(s_i);
-            s_ii.push_back(i);
-            Q.push(s_ii);
-        }
-        k++;iter++;
-
-    }
-
-    while(!Q.empty()) {
-        auto s_i = Q.front();
-        Q.pop();
-        uint8_t seq_size = s_i.size();
-
-        if (k%10000==0) {
-        cout << "\r" << "Current depth: " << (int)seq_size << " Nodes searched: " << k << " Nodes remaining: " << Q.size();
-        }
-
-
-        CubeState c_i = c_orig;
-        MOVE_CUBE_SEQUENCE(c_i,s_i);
-
-        if (c_i==solved) {
-            sol = s_i.toVector();
-            cout << " " << endl;
-            //cout << "\r" << "Current depth: " << depth << " Nodes searched: " << k << " Nodes remaining: " << Q.size();
-            cout << "Solution found" << endl;
-            break;
-        }
-        if (seq_size<max_depth) {
-            auto last_move = s_i.back();
-            //const vector<uint8_t>& allowed_moves = ((seq_size>1) && (last_move==s_i[seq_size-2])) ? MOVES_DOUB[last_move] : MOVES[last_move] ;
-            //const vector<uint8_t>& allowed_moves = (seq_size>1) ? MOVES_LOOKUP[s_i[seq_size-2]][last_move] : MOVES[last_move];
-            const vector<uint8_t>& allowed_moves = MOVES_LOOKUP[s_i[seq_size-2]][last_move];
-            for (auto &i: allowed_moves) {
-                CompactSequence s_ii(s_i);
-                s_ii.push_back(i);
-                //Q.push(s_ii);
-                Q.push(std::move(s_ii));
+    
+        vector<CompactSequence> frontier;
+    
+        // Load single & double move sequences
+        for (auto &i : MOVE_LIST) {
+            frontier.push_back(CompactSequence({i}));
+            for (auto &j : MOVES[i]) {
+                frontier.push_back(CompactSequence({i, j}));
             }
-        }   
-        k++;
-
-    }
-    return sol;
+        }
+    
+        int depth = 1;
+        int total_nodes = frontier.size();
+    
+        while (!frontier.empty() && depth <= max_depth) {
+            cout << "\n[Depth " << depth << "] Nodes to expand: " << frontier.size() << endl;
+            vector<CompactSequence> next_frontier;
+            bool found = false;
+    
+            #pragma omp parallel for schedule(dynamic)
+            for (int i = 0; i < frontier.size(); ++i) {
+                if (found) continue; // early exit flag
+                CubeState c_i = c_orig;
+                CompactSequence s_i = frontier[i];
+    
+                MOVE_CUBE_SEQUENCE(c_i, s_i);
+    
+                if (c_i == solved) {
+                    #pragma omp critical
+                    {
+                        if (!found) {
+                            sol = s_i.toVector();
+                            found = true;
+                        }
+                    }
+                    continue;
+                }
+    
+                if (s_i.size() < max_depth) {
+                    auto last = s_i.back();
+                    auto second_last = (s_i.size() > 1) ? s_i[s_i.size() - 2] : 0;
+                    const vector<uint8_t>& allowed_moves = MOVES_LOOKUP[second_last][last];
+    
+                    vector<CompactSequence> local_new;
+                    for (auto &m : allowed_moves) {
+                        CompactSequence s_new(s_i);
+                        s_new.push_back(m);
+                        local_new.push_back(std::move(s_new));
+                    }
+    
+                    #pragma omp critical
+                    {
+                        for (auto &s : local_new)
+                            next_frontier.push_back(std::move(s));
+                    }
+                }
+            }
+    
+            if (!sol.empty()) {
+                cout << "Solution found!" << endl;
+                return sol;
+            }
+    
+            total_nodes += next_frontier.size();
+            frontier = std::move(next_frontier);
+            depth++;
+        }
+    
+        cout << "No solution found within depth " << (int)max_depth << endl;
+        return sol;
 
     }
     else {
@@ -972,11 +954,11 @@ vector<uint8_t> SOLVE_B(const CubeState& c_orig, int max_depth = 20) {
                     #pragma omp atomic
                     nodes_searched++;
     
-                    if (nodes_searched % 10000 == 0) {
-                        cout << "\r" << "Nodes searched: " << nodes_searched 
-                             << " Forward queue: " << forward_queue.size() 
-                             << " Backward queue: " << backward_queue.size();
-                    }
+                    // if (nodes_searched % 10000 == 0) {
+                    //     cout << "\r" << "Nodes searched: " << nodes_searched 
+                    //          << " Forward queue: " << forward_queue.size() 
+                    //          << " Backward queue: " << backward_queue.size();
+                    // }
                 }
             }
     
@@ -1039,11 +1021,11 @@ vector<uint8_t> SOLVE_B(const CubeState& c_orig, int max_depth = 20) {
                     #pragma omp atomic
                     nodes_searched++;
     
-                    if (nodes_searched % 10000 == 0) {
-                        cout << "\r" << "Nodes searched: " << nodes_searched 
-                             << " Forward queue: " << forward_queue.size() 
-                             << " Backward queue: " << backward_queue.size();
-                    }
+                    // if (nodes_searched % 10000 == 0) {
+                    //     cout << "\r" << "Nodes searched: " << nodes_searched 
+                    //          << " Forward queue: " << forward_queue.size() 
+                    //          << " Backward queue: " << backward_queue.size();
+                    // }
                 }
             }
         } // end omp parallel sections
@@ -1075,6 +1057,328 @@ vector<uint8_t> SOLVE_B(const CubeState& c_orig, int max_depth = 20) {
     
     return sol;
 }
+
+// vector<uint8_t> SOLVE_B(const CubeState& c_orig, int max_depth = 20) {
+//     vector<uint8_t> sol;
+//     CubeState solved;
+    
+//     // Check if already solved
+//     if (c_orig == solved) {
+//         cout << "Already solved" << endl;
+//         return sol;
+//     }
+    
+//     // Using mutex-protected maps
+//     unordered_map<CubeState, CompactSequence> forward_visited;
+//     std::mutex forward_visited_mutex;
+    
+//     unordered_map<CubeState, CompactSequence> backward_visited;
+//     std::mutex backward_visited_mutex;
+    
+//     // Regular queues with mutex protection
+//     queue<pair<CubeState, CompactSequence>> forward_queue;
+//     std::mutex forward_queue_mutex;
+    
+//     queue<pair<CubeState, CompactSequence>> backward_queue;
+//     std::mutex backward_queue_mutex;
+    
+//     // Inverse move mapping - for the backward search
+//     const unordered_map<uint8_t, uint8_t> inverse_move = {
+//         {AV_MOVE::u, AV_MOVE::ui}, {AV_MOVE::ui, AV_MOVE::u},
+//         {AV_MOVE::d, AV_MOVE::di}, {AV_MOVE::di, AV_MOVE::d},
+//         {AV_MOVE::r, AV_MOVE::ri}, {AV_MOVE::ri, AV_MOVE::r},
+//         {AV_MOVE::l, AV_MOVE::li}, {AV_MOVE::li, AV_MOVE::l},
+//         {AV_MOVE::f, AV_MOVE::fi}, {AV_MOVE::fi, AV_MOVE::f},
+//         {AV_MOVE::b, AV_MOVE::bi}, {AV_MOVE::bi, AV_MOVE::b}
+//     };
+    
+//     // Initialize forward search with initial state
+//     forward_queue.push({c_orig, CompactSequence()});
+//     forward_visited[c_orig] = CompactSequence();
+    
+//     // Initialize backward search with solved state
+//     backward_queue.push({solved, CompactSequence()});
+//     backward_visited[solved] = CompactSequence();
+    
+//     std::atomic<int> nodes_searched(0);
+//     std::atomic<bool> solution_found(false);
+    
+//     // Shared solution information
+//     std::mutex solution_mutex;
+//     CompactSequence forward_path, backward_path;
+    
+//     // Progress reporting control
+//     std::atomic<bool> search_active(true);
+    
+//     // Start a thread for progress reporting
+//     std::thread progress_thread([&]() {
+//         while (search_active.load()) {
+//             std::this_thread::sleep_for(std::chrono::milliseconds(500));
+            
+//             int forward_size, backward_size, forward_visited_size, backward_visited_size;
+            
+//             {
+//                 std::lock_guard<std::mutex> lock1(forward_queue_mutex);
+//                 std::lock_guard<std::mutex> lock2(forward_visited_mutex);
+//                 forward_size = forward_queue.size();
+//                 forward_visited_size = forward_visited.size();
+//             }
+            
+//             {
+//                 std::lock_guard<std::mutex> lock1(backward_queue_mutex);
+//                 std::lock_guard<std::mutex> lock2(backward_visited_mutex);
+//                 backward_size = backward_queue.size();
+//                 backward_visited_size = backward_visited.size();
+//             }
+            
+//             cout << "\r" << "Nodes searched: " << nodes_searched.load() 
+//                  << " Forward queue: " << forward_size 
+//                  << " Backward queue: " << backward_size
+//                  << " Forward visited: " << forward_visited_size
+//                  << " Backward visited: " << backward_visited_size << std::flush;
+//         }
+//     });
+    
+//     // Main search loop
+//     while (!solution_found.load()) {
+//         bool forward_empty, backward_empty;
+        
+//         {
+//             std::lock_guard<std::mutex> lock(forward_queue_mutex);
+//             forward_empty = forward_queue.empty();
+//         }
+        
+//         {
+//             std::lock_guard<std::mutex> lock(backward_queue_mutex);
+//             backward_empty = backward_queue.empty();
+//         }
+        
+//         if (forward_empty && backward_empty) {
+//             break; // No solution found
+//         }
+        
+//         #pragma omp parallel sections num_threads(2)
+//         {
+//             // ========== Forward Search ==========
+//             #pragma omp section
+//             {
+//                 vector<pair<CubeState, CompactSequence>> forward_batch;
+                
+//                 // Get a batch of states to process
+//                 {
+//                     std::lock_guard<std::mutex> lock(forward_queue_mutex);
+//                     int batch_size = std::min(500, (int)forward_queue.size());
+//                     for (int i = 0; i < batch_size && !forward_queue.empty(); i++) {
+//                         forward_batch.push_back(forward_queue.front());
+//                         forward_queue.pop();
+//                     }
+//                 }
+                
+//                 // Process all states in the batch in parallel
+//                 if (!forward_batch.empty()) {
+//                     #pragma omp parallel for schedule(dynamic)
+//                     for (size_t i = 0; i < forward_batch.size(); i++) {
+//                         if (solution_found.load()) continue;
+                        
+//                         auto [current_state, move_sequence] = forward_batch[i];
+                        
+//                         uint8_t seq_size = move_sequence.size();
+//                         if (seq_size >= max_depth / 2) continue;
+                        
+//                         uint8_t last_move = seq_size > 0 ? move_sequence.back() : 255;
+//                         uint8_t second_last_move = seq_size > 1 ? move_sequence[seq_size - 2] : 255;
+                        
+//                         const vector<uint8_t>& allowed_moves = (seq_size > 1) ? 
+//                             MOVES_LOOKUP[second_last_move][last_move] : 
+//                             (seq_size > 0 ? MOVES[last_move] : MOVE_LIST);
+                        
+//                         // Process each move (can't parallelize further here because of state dependency)
+//                         for (auto move : allowed_moves) {
+//                             if (solution_found.load()) break;
+                            
+//                             CubeState next_state = current_state;
+//                             MOVE_CUBE(next_state, move);
+                            
+//                             CompactSequence next_sequence = move_sequence;
+//                             next_sequence.push_back(move);
+                            
+//                             // Try to add the state to visited map and queue
+//                             bool added_new_state = false;
+                            
+//                             {
+//                                 std::lock_guard<std::mutex> lock(forward_visited_mutex);
+//                                 if (forward_visited.find(next_state) == forward_visited.end()) {
+//                                     forward_visited[next_state] = next_sequence;
+//                                     added_new_state = true;
+//                                 }
+//                             }
+                            
+//                             if (added_new_state) {
+//                                 // Check if this state connects with the backward search
+//                                 bool found_connection = false;
+//                                 CompactSequence backward_sequence;
+                                
+//                                 {
+//                                     std::lock_guard<std::mutex> lock(backward_visited_mutex);
+//                                     auto it = backward_visited.find(next_state);
+//                                     if (it != backward_visited.end()) {
+//                                         found_connection = true;
+//                                         backward_sequence = it->second;
+//                                     }
+//                                 }
+                                
+//                                 if (found_connection && !solution_found.exchange(true)) {
+//                                     std::lock_guard<std::mutex> lock(solution_mutex);
+//                                     forward_path = next_sequence;
+//                                     backward_path = backward_sequence;
+//                                 }
+                                
+//                                 // Add to queue if no solution found yet
+//                                 if (!solution_found.load()) {
+//                                     std::lock_guard<std::mutex> lock(forward_queue_mutex);
+//                                     forward_queue.push({next_state, next_sequence});
+//                                 }
+//                             }
+//                         }
+                        
+//                         nodes_searched.fetch_add(1);
+//                     }
+//                 }
+//             }
+            
+//             // ========== Backward Search ==========
+//             #pragma omp section
+//             {
+//                 vector<pair<CubeState, CompactSequence>> backward_batch;
+                
+//                 // Get a batch of states to process
+//                 {
+//                     std::lock_guard<std::mutex> lock(backward_queue_mutex);
+//                     int batch_size = std::min(500, (int)backward_queue.size());
+//                     for (int i = 0; i < batch_size && !backward_queue.empty(); i++) {
+//                         backward_batch.push_back(backward_queue.front());
+//                         backward_queue.pop();
+//                     }
+//                 }
+                
+//                 // Process all states in the batch in parallel
+//                 if (!backward_batch.empty()) {
+//                     #pragma omp parallel for schedule(dynamic)
+//                     for (size_t i = 0; i < backward_batch.size(); i++) {
+//                         if (solution_found.load()) continue;
+                        
+//                         auto [current_state, move_sequence] = backward_batch[i];
+                        
+//                         uint8_t seq_size = move_sequence.size();
+//                         if (seq_size >= max_depth / 2) continue;
+                        
+//                         uint8_t last_move = seq_size > 0 ? move_sequence.back() : 255;
+//                         uint8_t second_last_move = seq_size > 1 ? move_sequence[seq_size - 2] : 255;
+                        
+//                         const vector<uint8_t>& prune_moves = (seq_size > 1) ? 
+//                             MOVES_LOOKUP[second_last_move][last_move] : 
+//                             (seq_size > 0 ? MOVES[last_move] : MOVE_LIST);
+                        
+//                         // Convert to inverse moves for backward search
+//                         vector<uint8_t> allowed_moves;
+//                         for (auto move : prune_moves) {
+//                             allowed_moves.push_back(inverse_move.at(move));
+//                         }
+                        
+//                         // Process each move
+//                         for (auto move : allowed_moves) {
+//                             if (solution_found.load()) break;
+                            
+//                             CubeState next_state = current_state;
+//                             MOVE_CUBE(next_state, move);
+                            
+//                             CompactSequence next_sequence = move_sequence;
+//                             next_sequence.push_back(move);
+                            
+//                             // Try to add the state to visited map and queue
+//                             bool added_new_state = false;
+                            
+//                             {
+//                                 std::lock_guard<std::mutex> lock(backward_visited_mutex);
+//                                 if (backward_visited.find(next_state) == backward_visited.end()) {
+//                                     backward_visited[next_state] = next_sequence;
+//                                     added_new_state = true;
+//                                 }
+//                             }
+                            
+//                             if (added_new_state) {
+//                                 // Check if this state connects with the forward search
+//                                 bool found_connection = false;
+//                                 CompactSequence forward_sequence;
+                                
+//                                 {
+//                                     std::lock_guard<std::mutex> lock(forward_visited_mutex);
+//                                     auto it = forward_visited.find(next_state);
+//                                     if (it != forward_visited.end()) {
+//                                         found_connection = true;
+//                                         forward_sequence = it->second;
+//                                     }
+//                                 }
+                                
+//                                 if (found_connection && !solution_found.exchange(true)) {
+//                                     std::lock_guard<std::mutex> lock(solution_mutex);
+//                                     forward_path = forward_sequence;
+//                                     backward_path = next_sequence;
+//                                 }
+                                
+//                                 // Add to queue if no solution found yet
+//                                 if (!solution_found.load()) {
+//                                     std::lock_guard<std::mutex> lock(backward_queue_mutex);
+//                                     backward_queue.push({next_state, next_sequence});
+//                                 }
+//                             }
+//                         }
+                        
+//                         nodes_searched.fetch_add(1);
+//                     }
+//                 }
+//             }
+//         } // end omp parallel sections
+//     }
+    
+//     // Stop progress reporting
+//     search_active.store(false);
+//     progress_thread.join();
+    
+//     if (solution_found.load()) {
+//         cout << endl << "Solution found!" << endl;
+        
+//         // Construct the complete solution
+//         sol = forward_path.toVector();
+        
+//         // Add reversed backward path
+//         vector<uint8_t> backward_vec = backward_path.toVector();
+//         for (int i = backward_vec.size() - 1; i >= 0; i--) {
+//             sol.push_back(inverse_move.at(backward_vec[i]));
+//         }
+        
+//         cout << "Solution length: " << sol.size() << endl;
+//         cout << "Forward path length: " << forward_path.size() << endl;
+//         cout << "Backward path length: " << backward_path.size() << endl;
+        
+//         int forward_visited_size, backward_visited_size;
+//         {
+//             std::lock_guard<std::mutex> lock(forward_visited_mutex);
+//             forward_visited_size = forward_visited.size();
+//         }
+//         {
+//             std::lock_guard<std::mutex> lock(backward_visited_mutex);
+//             backward_visited_size = backward_visited.size();
+//         }
+        
+//         cout << "Forward states explored: " << forward_visited_size << endl;
+//         cout << "Backward states explored: " << backward_visited_size << endl;
+//     } else {
+//         cout << endl << "No solution found within depth limit." << endl;
+//     }
+    
+//     return sol;
+// }
 
 std::vector<uint8_t> PARSE_SEQ(const std::string& input) {
     std::vector<uint8_t> move_indices;
