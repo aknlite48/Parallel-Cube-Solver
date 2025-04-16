@@ -15,6 +15,7 @@
 #include <cstdint>
 #include <array>
 #include <omp.h>
+#include <atomic>
 
 
 using namespace std;
