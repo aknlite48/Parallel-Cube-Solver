@@ -1092,10 +1092,12 @@ vector<uint8_t> SOLVE_B_PARALLEL(const CubeState& c_orig, int max_depth = 20) {
     unordered_map<CubeState, CompactSequence> backward_visited;
     
     // Queue for forward search (from initial state)
-    queue<pair<CubeState, CompactSequence>> forward_queue;
+    vector<CubeState> forward_current_level;
+    vector<CompactSequence> forward_current_sequences;
     
     // Queue for backward search (from solved state)
-    queue<pair<CubeState, CompactSequence>> backward_queue;
+    vector<CubeState> backward_current_level;
+    vector<CompactSequence> backward_current_sequences;
     
     // Inverse move mapping - for the backward search
     // This maps each move to its inverse move
@@ -1109,11 +1111,13 @@ vector<uint8_t> SOLVE_B_PARALLEL(const CubeState& c_orig, int max_depth = 20) {
     };
     
     // Initialize forward search with initial state
-    forward_queue.push({c_orig, CompactSequence()});
+    forward_current_level.push_back(c_orig);
+    forward_current_sequences.push_back(CompactSequence());
     forward_visited[c_orig] = CompactSequence();
     
     // Initialize backward search with solved state
-    backward_queue.push({solved, CompactSequence()});
+    backward_current_level.push_back(solved);
+    backward_current_sequences.push_back(CompactSequence());
     backward_visited[solved] = CompactSequence();
     
     int nodes_searched = 0;
@@ -1121,230 +1125,239 @@ vector<uint8_t> SOLVE_B_PARALLEL(const CubeState& c_orig, int max_depth = 20) {
     CompactSequence forward_path, backward_path;
     CubeState meeting_state;
     
-    // Set number of threads - if not specified by environment variable
-    #pragma omp parallel
-    {
-        #pragma omp master
-        {
-            cout << "Running with " << omp_get_num_threads() << " threads" << endl;
+    cout << "Running with OpenMP parallel search..." << endl;
+    
+    // Initialize next level containers outside the loop
+    vector<CubeState> forward_next_level;
+    vector<CompactSequence> forward_next_sequences;
+    vector<CubeState> backward_next_level;
+    vector<CompactSequence> backward_next_sequences;
+    
+    // Main search loop - iterate by depth level
+    for (int current_depth = 0; current_depth < max_depth / 2 && !solution_found; current_depth++) {
+        cout << "\rDepth level: " << current_depth 
+             << " | Forward states: " << forward_current_level.size() 
+             << " | Backward states: " << backward_current_level.size()
+             << " | Nodes searched: " << nodes_searched << flush;
+        
+        // Clear next level containers
+        forward_next_level.clear();
+        forward_next_sequences.clear();
+        backward_next_level.clear();
+        backward_next_sequences.clear();
+        
+        // Reserve space for efficiency (estimate based on branching factor)
+        int forward_estimate = forward_current_level.size() * 8;  // Average branching factor
+        int backward_estimate = backward_current_level.size() * 8;
+        forward_next_level.reserve(forward_estimate);
+        forward_next_sequences.reserve(forward_estimate);
+        backward_next_level.reserve(backward_estimate);
+        backward_next_sequences.reserve(backward_estimate);
+        
+        // ===== Process FORWARD search for this depth level =====
+        if (!forward_current_level.empty()) {
+            // Thread-local containers for next states
+            vector<vector<CubeState>> thread_forward_states;
+            vector<vector<CompactSequence>> thread_forward_sequences;
+            
+            #pragma omp parallel
+            {
+                int thread_id = omp_get_thread_num();
+                int num_threads = omp_get_num_threads();
+                
+                #pragma omp single
+                {
+                    thread_forward_states.resize(num_threads);
+                    thread_forward_sequences.resize(num_threads);
+                    
+                    for (int i = 0; i < num_threads; i++) {
+                        thread_forward_states[i].reserve(forward_estimate / num_threads);
+                        thread_forward_sequences[i].reserve(forward_estimate / num_threads);
+                    }
+                }
+                
+                // Process states in parallel
+                #pragma omp for schedule(dynamic, 64)
+                for (size_t i = 0; i < forward_current_level.size(); i++) {
+                    const CubeState& current_state = forward_current_level[i];
+                    const CompactSequence& move_sequence = forward_current_sequences[i];
+                    
+                    // Get last move(s) for pruning
+                    uint8_t seq_size = move_sequence.size();
+                    uint8_t last_move = seq_size > 0 ? move_sequence.back() : 255;
+                    uint8_t second_last_move = seq_size > 1 ? move_sequence[seq_size - 2] : 255;
+                    
+                    // Determine allowed moves
+                    const vector<uint8_t>& allowed_moves = (seq_size > 1) ? 
+                        MOVES_LOOKUP[second_last_move][last_move] : 
+                        (seq_size > 0 ? MOVES[last_move] : MOVE_LIST);
+                    
+                    // Try each allowed move
+                    for (auto move : allowed_moves) {
+                        CubeState next_state = current_state;
+                        MOVE_CUBE(next_state, move);
+                        
+                        // Skip if already visited in forward search (thread-safe read)
+                        if (forward_visited.count(next_state) > 0) {
+                            continue;
+                        }
+                        
+                        // Create new move sequence
+                        CompactSequence next_sequence = move_sequence;
+                        next_sequence.push_back(move);
+                        
+                        // Add to thread-local containers
+                        thread_forward_states[thread_id].push_back(next_state);
+                        thread_forward_sequences[thread_id].push_back(next_sequence);
+                    }
+                    
+                    nodes_searched++;
+                }
+            }
+            
+            // Merge thread-local results and update visit map (sequential)
+            for (size_t t = 0; t < thread_forward_states.size(); t++) {
+                for (size_t i = 0; i < thread_forward_states[t].size(); i++) {
+                    const CubeState& next_state = thread_forward_states[t][i];
+                    const CompactSequence& next_sequence = thread_forward_sequences[t][i];
+                    
+                    // Only add if not already visited (could have been added by another thread)
+                    if (forward_visited.count(next_state) == 0) {
+                        forward_visited[next_state] = next_sequence;
+                        forward_next_level.push_back(next_state);
+                        forward_next_sequences.push_back(next_sequence);
+                    }
+                }
+            }
         }
+        
+        // ===== Process BACKWARD search for this depth level =====
+        if (!backward_current_level.empty()) {
+            // Thread-local containers for next states
+            vector<vector<CubeState>> thread_backward_states;
+            vector<vector<CompactSequence>> thread_backward_sequences;
+            
+            #pragma omp parallel
+            {
+                int thread_id = omp_get_thread_num();
+                int num_threads = omp_get_num_threads();
+                
+                #pragma omp single
+                {
+                    thread_backward_states.resize(num_threads);
+                    thread_backward_sequences.resize(num_threads);
+                    
+                    for (int i = 0; i < num_threads; i++) {
+                        thread_backward_states[i].reserve(backward_estimate / num_threads);
+                        thread_backward_sequences[i].reserve(backward_estimate / num_threads);
+                    }
+                }
+                
+                // Process states in parallel
+                #pragma omp for schedule(dynamic, 64)
+                for (size_t i = 0; i < backward_current_level.size(); i++) {
+                    const CubeState& current_state = backward_current_level[i];
+                    const CompactSequence& move_sequence = backward_current_sequences[i];
+                    
+                    // Get last move(s) for pruning
+                    uint8_t seq_size = move_sequence.size();
+                    uint8_t last_move = seq_size > 0 ? move_sequence.back() : 255;
+                    uint8_t second_last_move = seq_size > 1 ? move_sequence[seq_size - 2] : 255;
+                    
+                    // Determine allowed moves - we need inverse moves for backward search
+                    const vector<uint8_t>& prune_moves = (seq_size > 1) ? 
+                        MOVES_LOOKUP[second_last_move][last_move] : 
+                        (seq_size > 0 ? MOVES[last_move] : MOVE_LIST);
+                        
+                    // We need to apply inverse moves for the backward search
+                    vector<uint8_t> allowed_moves;
+                    for (auto move : prune_moves) {
+                        allowed_moves.push_back(inverse_move[move]);
+                    }
+                    
+                    // Try each allowed move
+                    for (auto move : allowed_moves) {
+                        CubeState next_state = current_state;
+                        MOVE_CUBE(next_state, move);
+                        
+                        // Skip if already visited in backward search (thread-safe read)
+                        if (backward_visited.count(next_state) > 0) {
+                            continue;
+                        }
+                        
+                        // Create new move sequence
+                        CompactSequence next_sequence = move_sequence;
+                        next_sequence.push_back(move);
+                        
+                        // Add to thread-local containers
+                        thread_backward_states[thread_id].push_back(next_state);
+                        thread_backward_sequences[thread_id].push_back(next_sequence);
+                    }
+                    
+                    nodes_searched++;
+                }
+            }
+            
+            // Merge thread-local results and update visit map (sequential)
+            for (size_t t = 0; t < thread_backward_states.size(); t++) {
+                for (size_t i = 0; i < thread_backward_states[t].size(); i++) {
+                    const CubeState& next_state = thread_backward_states[t][i];
+                    const CompactSequence& next_sequence = thread_backward_sequences[t][i];
+                    
+                    // Only add if not already visited (could have been added by another thread)
+                    if (backward_visited.count(next_state) == 0) {
+                        backward_visited[next_state] = next_sequence;
+                        backward_next_level.push_back(next_state);
+                        backward_next_sequences.push_back(next_sequence);
+                    }
+                }
+            }
+        }
+        
+        // ===== Check for meeting points between forward and backward searches =====
+        // Check newly generated forward states against all backward states
+        for (size_t i = 0; i < forward_next_level.size() && !solution_found; i++) {
+            const CubeState& state = forward_next_level[i];
+            if (backward_visited.count(state) > 0) {
+                solution_found = true;
+                meeting_state = state;
+                forward_path = forward_visited[state];
+                backward_path = backward_visited[state];
+                break;
+            }
+        }
+        
+        // If no solution found yet, check newly generated backward states against all forward states
+        if (!solution_found) {
+            for (size_t i = 0; i < backward_next_level.size() && !solution_found; i++) {
+                const CubeState& state = backward_next_level[i];
+                if (forward_visited.count(state) > 0) {
+                    solution_found = true;
+                    meeting_state = state;
+                    forward_path = forward_visited[state];
+                    backward_path = backward_visited[state];
+                    break;
+                }
+            }
+        }
+        
+        // Prepare for next depth level - swap current and next
+        forward_current_level = std::move(forward_next_level);
+        forward_current_sequences = std::move(forward_next_sequences);
+        backward_current_level = std::move(backward_next_level);
+        backward_current_sequences = std::move(backward_next_sequences);
+        
+        // Re-create empty containers for next iteration
+        forward_next_level = vector<CubeState>();
+        forward_next_sequences = vector<CompactSequence>();
+        backward_next_level = vector<CubeState>();
+        backward_next_sequences = vector<CompactSequence>();
     }
     
-    // Main search loop
-    while (!forward_queue.empty() && !backward_queue.empty() && !solution_found) {
-        // ===== FORWARD SEARCH =====
-        int forward_level_size = forward_queue.size();
-        
-        // Extract all current level states from the queue to process them in parallel
-        vector<pair<CubeState, CompactSequence>> forward_level_states;
-        forward_level_states.reserve(forward_level_size);
-        
-        for (int i = 0; i < forward_level_size; i++) {
-            forward_level_states.push_back(forward_queue.front());
-            forward_queue.pop();
-        }
-        
-        // Process states in parallel and collect results
-        vector<vector<pair<CubeState, CompactSequence>>> thread_results;
-        
-        #pragma omp parallel
-        {
-            int thread_id = omp_get_thread_num();
-            
-            #pragma omp single
-            {
-                thread_results.resize(omp_get_num_threads());
-            }
-            
-            vector<pair<CubeState, CompactSequence>> local_new_states;
-            local_new_states.reserve(forward_level_size * 12 / omp_get_num_threads());
-            
-            #pragma omp for schedule(dynamic, 16)
-            for (int i = 0; i < forward_level_size; i++) {
-                // Process this state
-                const CubeState& current_state = forward_level_states[i].first;
-                const CompactSequence& move_sequence = forward_level_states[i].second;
-                
-                uint8_t seq_size = move_sequence.size();
-                
-                // Skip if already too deep
-                if (seq_size >= max_depth / 2) {
-                    continue;
-                }
-                
-                // Get last move(s) for pruning
-                uint8_t last_move = seq_size > 0 ? move_sequence.back() : 255;
-                uint8_t second_last_move = seq_size > 1 ? move_sequence[seq_size - 2] : 255;
-                
-                // Determine allowed moves
-                const vector<uint8_t>& allowed_moves = (seq_size > 1) ? 
-                    MOVES_LOOKUP[second_last_move][last_move] : 
-                    (seq_size > 0 ? MOVES[last_move] : MOVE_LIST);
-                
-                // Generate next states
-                for (auto move : allowed_moves) {
-                    CubeState next_state = current_state;
-                    MOVE_CUBE(next_state, move);
-                    
-                    // Create new move sequence
-                    CompactSequence next_sequence = move_sequence;
-                    next_sequence.push_back(move);
-                    
-                    // Add to local results (will process later)
-                    local_new_states.push_back({next_state, next_sequence});
-                }
-                
-                nodes_searched++;
-            }
-            
-            // Store local results
-            thread_results[thread_id] = std::move(local_new_states);
-        }
-        
-        // Now process all the new states sequentially to ensure thread safety
-        for (auto& thread_states : thread_results) {
-            for (auto& [next_state, next_sequence] : thread_states) {
-                // Skip if already visited in forward search
-                if (forward_visited.find(next_state) != forward_visited.end()) {
-                    continue;
-                }
-                
-                // Store in visited states
-                forward_visited[next_state] = next_sequence;
-                
-                // Check if this state has been visited in backward search
-                if (backward_visited.find(next_state) != backward_visited.end()) {
-                    // Found a meeting point - solution found!
-                    forward_path = next_sequence;
-                    backward_path = backward_visited[next_state];
-                    meeting_state = next_state;
-                    solution_found = true;
-                    break;
-                }
-                
-                // Add to queue for next level
-                forward_queue.push({next_state, next_sequence});
-            }
-            
-            if (solution_found) break;
-        }
-        
-        if (solution_found) break;
-        
-        // ===== BACKWARD SEARCH =====
-        int backward_level_size = backward_queue.size();
-        
-        // Extract all current level states from the queue to process them in parallel
-        vector<pair<CubeState, CompactSequence>> backward_level_states;
-        backward_level_states.reserve(backward_level_size);
-        
-        for (int i = 0; i < backward_level_size; i++) {
-            backward_level_states.push_back(backward_queue.front());
-            backward_queue.pop();
-        }
-        
-        // Process states in parallel and collect results
-        thread_results.clear();
-        
-        #pragma omp parallel
-        {
-            int thread_id = omp_get_thread_num();
-            
-            #pragma omp single
-            {
-                thread_results.resize(omp_get_num_threads());
-            }
-            
-            vector<pair<CubeState, CompactSequence>> local_new_states;
-            local_new_states.reserve(backward_level_size * 12 / omp_get_num_threads());
-            
-            #pragma omp for schedule(dynamic, 16)
-            for (int i = 0; i < backward_level_size; i++) {
-                // Process this state
-                const CubeState& current_state = backward_level_states[i].first;
-                const CompactSequence& move_sequence = backward_level_states[i].second;
-                
-                uint8_t seq_size = move_sequence.size();
-                
-                // Skip if already too deep
-                if (seq_size >= max_depth / 2) {
-                    continue;
-                }
-                
-                // Get last move(s) for pruning
-                uint8_t last_move = seq_size > 0 ? move_sequence.back() : 255;
-                uint8_t second_last_move = seq_size > 1 ? move_sequence[seq_size - 2] : 255;
-                
-                // Determine allowed moves - we need inverse moves for backward search
-                const vector<uint8_t>& prune_moves = (seq_size > 1) ? 
-                    MOVES_LOOKUP[second_last_move][last_move] : 
-                    (seq_size > 0 ? MOVES[last_move] : MOVE_LIST);
-                    
-                // We need to apply inverse moves for the backward search
-                vector<uint8_t> allowed_moves;
-                for (auto move : prune_moves) {
-                    allowed_moves.push_back(inverse_move[move]);
-                }
-                
-                // Generate next states
-                for (auto move : allowed_moves) {
-                    CubeState next_state = current_state;
-                    MOVE_CUBE(next_state, move);
-                    
-                    // Create new move sequence
-                    CompactSequence next_sequence = move_sequence;
-                    next_sequence.push_back(move);
-                    
-                    // Add to local results (will process later)
-                    local_new_states.push_back({next_state, next_sequence});
-                }
-                
-                nodes_searched++;
-            }
-            
-            // Store local results
-            thread_results[thread_id] = std::move(local_new_states);
-        }
-        
-        // Now process all the new states sequentially to ensure thread safety
-        for (auto& thread_states : thread_results) {
-            for (auto& [next_state, next_sequence] : thread_states) {
-                // Skip if already visited in backward search
-                if (backward_visited.find(next_state) != backward_visited.end()) {
-                    continue;
-                }
-                
-                // Store in visited states
-                backward_visited[next_state] = next_sequence;
-                
-                // Check if this state has been visited in forward search
-                if (forward_visited.find(next_state) != forward_visited.end()) {
-                    // Found a meeting point - solution found!
-                    forward_path = forward_visited[next_state];
-                    backward_path = next_sequence;
-                    meeting_state = next_state;
-                    solution_found = true;
-                    break;
-                }
-                
-                // Add to queue for next level
-                backward_queue.push({next_state, next_sequence});
-            }
-            
-            if (solution_found) break;
-        }
-        
-        if (nodes_searched % 10000 == 0) {
-            cout << "\r" << "Nodes searched: " << nodes_searched 
-                 << " Forward queue: " << forward_queue.size() 
-                 << " Backward queue: " << backward_queue.size() 
-                 << " Forward visited: " << forward_visited.size()
-                 << " Backward visited: " << backward_visited.size();
-        }
-    }
+    cout << endl;
     
     if (solution_found) {
-        cout << endl << "Solution found!" << endl;
+        cout << "Solution found!" << endl;
         
         // Construct the complete solution
         // Forward path + Reversed backward path (need to use inverse moves)
@@ -1364,7 +1377,7 @@ vector<uint8_t> SOLVE_B_PARALLEL(const CubeState& c_orig, int max_depth = 20) {
         cout << "Forward states explored: " << forward_visited.size() << endl;
         cout << "Backward states explored: " << backward_visited.size() << endl;
     } else {
-        cout << endl << "No solution found within depth limit." << endl;
+        cout << "No solution found within depth limit." << endl;
     }
     
     return sol;
