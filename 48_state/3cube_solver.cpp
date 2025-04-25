@@ -1334,7 +1334,8 @@ int main (int argc, char* argv[]) {
     printf("Solver Status:");
 
     //apply solver
-    vector<uint8_t> final_seq = (solver_type=='E') ? SOLVE_E(cube,use_hash,max_depth) : SOLVE_B(cube,max_depth);
+    //vector<uint8_t> final_seq = (solver_type=='E') ? SOLVE_E(cube,use_hash,max_depth) : SOLVE_B(cube,max_depth);
+    vector<uint8_t> final_seq = solve_cube(cube,max_depth);
 
     //vector<uint8_t> final_seq = SOLVE_E(cube,use_hash,max_depth);
     //vector<uint8_t> final_seq = solveCubeBidirectional(cube);
