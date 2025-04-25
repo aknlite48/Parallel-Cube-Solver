@@ -14,6 +14,8 @@
 #include <cstring> //added for cims compatibility
 #include <cstdint>
 #include <array>
+#include <omp.h>
+#include <atomic>
 
 
 using namespace std;
@@ -1063,6 +1065,107 @@ vector<uint8_t> SOLVE_B(const CubeState& c_orig, int max_depth = 20) {
         cout << "Backward states explored: " << backward_visited.size() << endl;
     } else {
         cout << endl << "No solution found within depth limit." << endl;
+    }
+    
+    return sol;
+}
+
+vector<uint8_t> solve_cube(const CubeState& c_orig, int max_depth) {
+    CubeState solved;
+    vector<uint8_t> sol;
+    
+    if (c_orig == solved) {
+        cout << "already solved" << endl;
+        return sol;
+    }
+    
+    // Shared flag to indicate if a solution has been found
+    std::atomic<bool> solution_found(false);
+    
+    #pragma omp parallel
+    {
+        // Each thread will have its own copy of these variables
+        vector<uint8_t> local_sol;
+        bool found_solution = false;
+        
+        #pragma omp for schedule(dynamic, 1)
+        for (int move_idx = 0; move_idx < MOVE_LIST.size(); move_idx++) {
+            // Skip if another thread already found a solution
+            if (solution_found) continue;
+            
+            uint8_t first_move = MOVE_LIST[move_idx];
+            queue<CompactSequence> Q;
+            
+            // Start with the specific first move
+            Q.push(CompactSequence({first_move}));
+            
+            // Add double move sequences starting with this first move
+            for (auto &j: MOVES[first_move]) {
+                Q.push(CompactSequence({first_move, j}));
+            }
+            
+            int k = 1;
+            
+            // BFS loop
+            while (!Q.empty() && !solution_found) {
+                auto s_i = Q.front();
+                Q.pop();
+                uint8_t seq_size = s_i.size();
+                
+                if (k % 10000 == 0) {
+                    #pragma omp critical
+                    {
+                        cout << "\r" << "Thread " << omp_get_thread_num() 
+                             << " | First move: " << (int)first_move 
+                             << " | Current depth: " << (int)seq_size 
+                             << " | Nodes searched: " << k 
+                             << " | Nodes remaining: " << Q.size();
+                    }
+                }
+                
+                CubeState c_i = c_orig;
+                MOVE_CUBE_SEQUENCE(c_i, s_i);
+                
+                if (c_i == solved) {
+                    local_sol = s_i.toVector();
+                    found_solution = true;
+                    solution_found = true;
+                    
+                    #pragma omp critical
+                    {
+                        cout << endl;
+                        cout << "Solution found by thread " << omp_get_thread_num() 
+                             << " starting with move " << (int)first_move << endl;
+                    }
+                    
+                    break;
+                }
+                
+                // Continue BFS expansion if we haven't reached max depth
+                if (seq_size < max_depth) {
+                    auto last_move = s_i.back();
+                    const vector<uint8_t>& allowed_moves = (seq_size > 1) ? 
+                        MOVES_LOOKUP[s_i[seq_size-2]][last_move] : MOVES[last_move];
+                    
+                    for (auto &i: allowed_moves) {
+                        CompactSequence s_ii(s_i);
+                        s_ii.push_back(i);
+                        Q.push(std::move(s_ii));
+                    }
+                }
+                
+                k++;
+            }
+            
+            if (found_solution) {
+                #pragma omp critical
+                {
+                    if (sol.empty() || local_sol.size() < sol.size()) {
+                        sol = local_sol;
+                    }
+                }
+            }
+        }
     }
     
     return sol;
